@@ -4,7 +4,8 @@ import { useMemo } from 'react';
 import { fmtMoney } from '../lib/format';
 
 // Equity curve: PnL kumulatif (running total) dari posisi closed, urut waktu.
-// Hijau saat segmen naik, merah saat turun.
+// Per-posisi (tiap posisi closed = 1 titik). Hijau saat kumulatif di atas 0,
+// merah saat di bawah 0. Segmen yang menyeberang nol dipecah di titik potong.
 export default function Chart({ positions, cur, solUsd, usdIdr }) {
   const pts = useMemo(() => {
     const s = [...positions].sort((a, b) => a.closedAt - b.closedAt);
@@ -37,19 +38,26 @@ export default function Chart({ positions, cur, solUsd, usdIdr }) {
   const y = (v) => padT + ((vmax - v) / (vmax - vmin)) * (H - padT - padB);
   const y0 = y(0);
 
+  const GREEN = '#3fb950', RED = '#f85149';
+  const GREEN_FILL = '#143426', RED_FILL = '#3d1418';
+
+  // Warna ditentukan oleh posisi relatif terhadap nol (bukan naik/turun).
+  // Segmen yang menyeberang nol dipecah jadi dua sub-segmen di titik potong.
   const segs = [];
   for (let i = 1; i < pts.length; i++) {
-    segs.push({
-      x1: x(pts[i - 1].t), y1: y(pts[i - 1].v),
-      x2: x(pts[i].t), y2: y(pts[i].v),
-      up: pts[i].v >= pts[i - 1].v,
-    });
+    const a = pts[i - 1], b = pts[i];
+    if ((a.v >= 0) === (b.v >= 0) || a.v === b.v) {
+      segs.push({
+        x1: x(a.t), y1: y(a.v), x2: x(b.t), y2: y(b.v),
+        pos: (a.v >= 0 && b.v >= 0),
+      });
+    } else {
+      const f = a.v / (a.v - b.v); // fraksi sepanjang segmen di mana v = 0
+      const xc = x(a.t) + f * (x(b.t) - x(a.t));
+      segs.push({ x1: x(a.t), y1: y(a.v), x2: xc, y2: y0, pos: a.v >= 0 });
+      segs.push({ x1: xc, y1: y0, x2: x(b.t), y2: y(b.v), pos: b.v >= 0 });
+    }
   }
-
-  const areaD =
-    `M${x(pts[0].t).toFixed(1)},${y(pts[0].v).toFixed(1)} ` +
-    pts.slice(1).map((p) => `L${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ') +
-    ` L${x(pts[pts.length - 1].t).toFixed(1)},${y0.toFixed(1)} L${x(pts[0].t).toFixed(1)},${y0.toFixed(1)} Z`;
 
   const last = pts[pts.length - 1].v;
   const fmt = (v, o) => fmtMoney(v, cur, solUsd, usdIdr, o);
@@ -58,16 +66,20 @@ export default function Chart({ positions, cur, solUsd, usdIdr }) {
     <>
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }} role="img" aria-label="equity curve">
         <line x1="0" y1={y0} x2={W} y2={y0} stroke="#2a3038" strokeWidth="1" strokeDasharray="3 4" />
-        <path d={areaD} fill="#143426" opacity="0.35" />
+        {segs.map((sg, i) => (
+          <polygon key={`a${i}`}
+            points={`${sg.x1},${sg.y1} ${sg.x2},${sg.y2} ${sg.x2},${y0} ${sg.x1},${y0}`}
+            fill={sg.pos ? GREEN_FILL : RED_FILL} opacity="0.35" />
+        ))}
         {segs.map((sg, i) => (
           <line key={i} x1={sg.x1} y1={sg.y1} x2={sg.x2} y2={sg.y2}
-            stroke={sg.up ? '#3fb950' : '#f85149'} strokeWidth="2" strokeLinejoin="round" />
+            stroke={sg.pos ? GREEN : RED} strokeWidth="2" strokeLinejoin="round" />
         ))}
         <text x="3" y="11" fontSize="9" fill="#6e7681">{fmt(vmax, { compact: true })}</text>
         <text x="3" y={y0 - 3} fontSize="9" fill="#6e7681">{cur === 'sol' ? '0 SOL' : '0'}</text>
       </svg>
       <div className="dim" style={{ fontSize: 10, marginTop: 7 }}>
-        kumulatif realized pnl · hijau naik / merah turun · {fmt(last, {})}
+        kumulatif realized pnl · hijau di atas 0 / merah di bawah 0 · {fmt(last, {})}
       </div>
     </>
   );
