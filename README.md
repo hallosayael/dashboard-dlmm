@@ -1,28 +1,45 @@
 # DLMM PnL Dashboard
 
 Dashboard bergaya terminal/TUI untuk melihat hasil trading **DLMM** (posisi yang
-sudah closed) dari sebuah wallet Solana. PnL dalam **SOL**. Responsive (desktop & HP).
+sudah closed) dari sebuah wallet Solana. Read-only — cukup tempel public key,
+tanpa connect wallet. Responsive (rapi di desktop & HP), tanpa database, tanpa API key.
 
-Fitur:
-- Halaman awal untuk **tempel alamat wallet** (read-only, cukup public key).
-- Ringkasan: net PnL, total fees, win rate, avg/posisi, best & worst.
-- Grafik **PnL per posisi** + **kalender heatmap** PnL harian (ganti bulan).
-- Tabel posisi (di HP jadi kartu).
-- Tombol **Lihat demo** (data contoh).
+## Fitur
+
+- **Halaman awal**: tempel alamat wallet Solana (read-only) atau klik **Lihat demo**.
+- **Toggle mata uang `SOL / USD / IDR`** (global) — semua angka ikut berubah.
+- **Toggle rentang `7D / 30D / all`** (global, default **30D**) — memfilter
+  summary, breakdown, dan chart.
+- **Toggle tampilan `chart / calendar`**:
+  - **Equity curve** — PnL kumulatif sepanjang waktu (hijau saat naik, merah saat turun).
+  - **Calendar heatmap** — realized PnL per hari, navigasi per bulan.
+- **Summary**: net PnL, total fees, win rate, best & worst.
+- **PnL breakdown**: `fees` vs `price/IL` (di mana `price/IL = net − fees`) →
+  kelihatan seberapa besar fee menutup impermanent loss.
+- **Tabel posisi closed** (15 baris/halaman, prev/next; di HP jadi kartu).
+- Gaya TUI: statusline + segmented control, flag ikut ke prompt (`--denom`, `--range`),
+  kursor blok, key-hints (dekoratif).
 
 ---
 
 ## Sumber data (tanpa database, tanpa API key)
 
-Membaca dari **portfolio API resmi Meteora** (endpoint yang sama dipakai
-bengbeng.fun):
+Membaca dari **API resmi Meteora** (endpoint yang sama dipakai bengbeng.fun) —
+data PnL/fee/deposit **sudah dihitung Meteora** (harga historis + fee benar):
 
-- `GET https://dlmm.datapi.meteora.ag/portfolio?user={wallet}&days_back=365`
-  → posisi closed per pool, dengan `pnlSol`, `totalFeeSol`, `totalDepositSol`,
-  `lastClosedAt` — semua sudah dihitung Meteora (harga historis + fee benar).
-- `https://lite-api.jup.ag/price/v3` → harga SOL (hanya untuk tampilan footer).
+1. `GET /portfolio?user={wallet}&days_back=365` — daftar pool wallet (+ nama pair).
+2. `GET /positions/{pool}/pnl?user={wallet}&status=closed` — **posisi closed
+   individual** per pool (createdAt, closedAt, `pnlSol`, fee, deposit).
 
-Tidak perlu Helius / RPC / API key apa pun.
+Base: `https://dlmm.datapi.meteora.ag`
+
+Konversi mata uang (dihitung dari nilai SOL, di-fetch saat load):
+- **USD** — harga SOL dari `https://lite-api.jup.ag/price/v3`.
+- **IDR** — kurs USD→IDR dari `https://open.er-api.com`.
+
+> Catatan: USD/IDR adalah konversi **mark-to-market harga sekarang** (bukan harga
+> saat posisi ditutup) dan **di-update saat halaman di-reload**. Nilai SOL adalah
+> angka realized yang sebenarnya.
 
 ---
 
@@ -33,8 +50,11 @@ Tidak perlu Helius / RPC / API key apa pun.
    (Tanpa environment variable.)
 
 ### Domain custom (mis. `dlmm.my.id`)
-Project → **Settings → Domains** → add domain → pasang record DNS yang
-ditunjukkan Vercel (A `@` → `76.76.21.21`, CNAME `www` → `cname.vercel-dns.com`).
+Karena nameserver bisa diarahkan ke Vercel, paling mudah:
+- Di registrar: set nameserver domain ke `ns1.vercel-dns.com` & `ns2.vercel-dns.com`,
+  lalu **Settings → Domains** di project → Add domain. SSL otomatis.
+- Atau tetap pakai DNS registrar: A `@` → `76.76.21.21`, CNAME `www` → `cname.vercel-dns.com`.
+- Subdomain (mis. `dashboard.dlmm.my.id`): cukup Add di **Settings → Domains**.
 
 ---
 
@@ -51,13 +71,11 @@ Butuh Node.js 18+.
 
 ## Batasan
 
-- **Agregasi per pool** (sesuai endpoint Meteora): kalau satu pool dibuka &
-  ditutup berkali-kali, dijumlah jadi satu baris. Total posisi mentah bisa lebih
-  banyak dari jumlah baris pool.
 - **`days_back` dibatasi 365 hari** oleh API Meteora — posisi lebih tua tak terbaca.
-- Kolom **age** tidak tersedia (endpoint hanya memberi tanggal close, bukan buka)
-  → ditampilkan "—".
-- Tanggal di kalender = `lastClosedAt` per pool (GMT+7).
+- Kalender & nilai harian memakai timezone **GMT+7** (ubah `TZ` di `components/Calendar.js`).
+- Toggle rentang hanya mempengaruhi summary/breakdown/chart; **kalender** pakai
+  navigasi bulan sendiri, **tabel** menampilkan semua posisi (dengan pagination).
+- USD/IDR perkiraan (mark-to-market, lihat catatan di atas).
 
 ---
 
@@ -71,12 +89,13 @@ app/
   api/positions/route.js   API route (server) -> getWalletData(wallet)
 components/
   Landing.js               halaman input wallet
-  Dashboard.js             ringkasan + bars + tabel/kartu
+  Dashboard.js             statusline + toggle + summary + breakdown + tabel/kartu
+  Chart.js                 equity curve (PnL kumulatif)
   Calendar.js              kalender heatmap PnL harian (GMT+7)
 lib/
   meteora.js               orchestrator + demo data
-  portfolio.js             fetch portfolio Meteora (sumber utama)
-  prices.js                harga SOL (Jupiter, untuk footer)
+  portfolio.js             fetch posisi closed per-posisi (Meteora)
+  prices.js                harga SOL (Jupiter) + kurs IDR (open.er-api.com)
   http.js                  fetch timeout + concurrency helper
-  format.js                helper format (client + server)
+  format.js                helper format + konversi mata uang
 ```
