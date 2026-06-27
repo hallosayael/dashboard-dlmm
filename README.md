@@ -43,32 +43,6 @@ Konversi mata uang (dihitung dari nilai SOL, di-fetch saat load):
 
 ---
 
-## Deploy ke Vercel
-
-1. Push folder ini ke repo GitHub.
-2. [vercel.com](https://vercel.com) → **Add New… → Project** → import repo → **Deploy**.
-   (Tanpa environment variable.)
-
-### Domain custom (mis. `dlmm.my.id`)
-Karena nameserver bisa diarahkan ke Vercel, paling mudah:
-- Di registrar: set nameserver domain ke `ns1.vercel-dns.com` & `ns2.vercel-dns.com`,
-  lalu **Settings → Domains** di project → Add domain. SSL otomatis.
-- Atau tetap pakai DNS registrar: A `@` → `76.76.21.21`, CNAME `www` → `cname.vercel-dns.com`.
-- Subdomain (mis. `dashboard.dlmm.my.id`): cukup Add di **Settings → Domains**.
-
----
-
-## Jalankan lokal
-
-```bash
-npm install
-npm run dev      # http://localhost:3000
-```
-
-Butuh Node.js 18+.
-
----
-
 ## Batasan
 
 - **`days_back` dibatasi 365 hari** oleh API Meteora — posisi lebih tua tak terbaca.
