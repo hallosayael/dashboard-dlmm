@@ -190,16 +190,19 @@ html, body {
 .navbtn:hover:not(:disabled) { color: var(--text); }
 .navbtn:disabled { opacity: .35; cursor: default; }
 
-.cg { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cg { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
 .wdrow { margin-bottom: 6px; }
 .wd { color: #6e7681; font-size: 10px; letter-spacing: .05em; padding-left: 2px; }
 .cc {
   min-height: 50px; border-radius: 6px; padding: 5px 6px;
   display: flex; flex-direction: column; justify-content: space-between;
-  border: 1px solid rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.04); overflow: hidden;
 }
 .cc .cd { font-size: 10px; color: #7d8694; }
-.cc .cv { font-size: 10px; text-align: right; color: var(--text); }
+.cc .cv {
+  font-size: 10px; text-align: right; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
 .ce { background: #141821; }
 .ce .cd { color: #4d5560; }
 .cg1 { background: #16291d; }
