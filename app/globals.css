@@ -212,7 +212,7 @@ html, body {
 /* calendar: 7 hari + kolom WEEK + baris total harian */
 .cal-scroll { overflow-x: auto; }
 .cal-grid { min-width: 460px; }
-.cg8 { display: grid; grid-template-columns: repeat(7, 1fr) .82fr; gap: 5px; margin-bottom: 5px; }
+.cg8 { display: grid; grid-template-columns: repeat(8, 1fr); gap: 5px; margin-bottom: 5px; }
 .wd.wkh { text-align: right; color: #8b949e; }
 .cc-bot { display: flex; justify-content: space-between; align-items: flex-end; gap: 3px; }
 .cpos { font-size: 8px; color: #5a626e; }
