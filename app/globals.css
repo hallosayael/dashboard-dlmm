@@ -190,19 +190,16 @@ html, body {
 .navbtn:hover:not(:disabled) { color: var(--text); }
 .navbtn:disabled { opacity: .35; cursor: default; }
 
-.cg { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.cg { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .wdrow { margin-bottom: 6px; }
 .wd { color: #6e7681; font-size: 10px; letter-spacing: .05em; padding-left: 2px; }
 .cc {
   min-height: 50px; border-radius: 6px; padding: 5px 6px;
   display: flex; flex-direction: column; justify-content: space-between;
-  border: 1px solid rgba(255,255,255,.04); overflow: hidden;
+  border: 1px solid rgba(255,255,255,.04);
 }
 .cc .cd { font-size: 10px; color: #7d8694; }
-.cc .cv {
-  font-size: 10px; text-align: right; color: var(--text);
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+.cc .cv { font-size: 10px; text-align: right; color: var(--text); }
 .ce { background: #141821; }
 .ce .cd { color: #4d5560; }
 .cg1 { background: #16291d; }
@@ -211,6 +208,26 @@ html, body {
 .cr1 { background: #3a1c1e; }
 .cr2 { background: #6e2528; }
 .cr3 { background: #a8332f; }
+
+/* calendar: 7 hari + kolom WEEK + baris total harian */
+.cal-scroll { overflow-x: auto; }
+.cal-grid { min-width: 460px; }
+.cg8 { display: grid; grid-template-columns: repeat(7, 1fr) .82fr; gap: 5px; margin-bottom: 5px; }
+.wd.wkh { text-align: right; color: #8b949e; }
+.cc-bot { display: flex; justify-content: space-between; align-items: flex-end; gap: 3px; }
+.cpos { font-size: 8px; color: #5a626e; }
+.wkcell {
+  display: flex; flex-direction: column; justify-content: center; align-items: flex-end; gap: 2px;
+  border-radius: 6px; padding: 4px 7px; background: #12161d; border: 1px solid rgba(255,255,255,.05);
+}
+.wkcell .wkl { font-size: 8.5px; color: #6e7681; }
+.wkcell .wkv { font-size: 10.5px; }
+.totrow { margin-top: 3px; margin-bottom: 0; }
+.totcell {
+  border-radius: 6px; padding: 6px 4px; text-align: center; font-size: 10px;
+  background: #12161d; border: 1px solid rgba(255,255,255,.04);
+}
+.totcell.grand { background: #161b22; }
 
 /* ---------- landing ---------- */
 .landing-wrap { padding-top: 64px; }
@@ -273,5 +290,6 @@ html, body {
 
 @media (max-width: 400px) {
   .cc .cv { display: none; }
+  .cpos { display: none; }
   .cc { min-height: 34px; }
 }
