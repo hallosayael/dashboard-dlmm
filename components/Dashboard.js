@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import Calendar from './Calendar';
 import Chart from './Chart';
+import PositionModal from './PositionModal';
 import { fmtMoney, fmtPct, shortAddr, sinceStr } from '../lib/format';
 
 const PAGE_SIZE = 15;
@@ -27,6 +28,7 @@ export default function Dashboard({ wallet, data, onReset }) {
   const [range, setRange] = useState('30d');
   const [view, setView] = useState('chart');
   const [page, setPage] = useState(1);
+  const [selected, setSelected] = useState(null);
 
   const m = (sol, o) => fmtMoney(sol, cur, solUsd, usdIdr, o);
 
@@ -137,7 +139,7 @@ export default function Dashboard({ wallet, data, onReset }) {
                       {pageItems.map((p, i) => {
                         const win = p.pnlSol >= 0;
                         return (
-                          <tr key={p.positionAddress || i}>
+                          <tr key={p.positionAddress || i} className="pos-row" onClick={() => setSelected(p)}>
                             <td className="br">{p.pair}</td>
                             <td className="dim">{sinceStr(p.closedAt)}</td>
                             <td>{m(p.depositSol, { compact: true, unit: false, sign: false })}</td>
@@ -156,7 +158,7 @@ export default function Dashboard({ wallet, data, onReset }) {
                   {pageItems.map((p, i) => {
                     const win = p.pnlSol >= 0;
                     return (
-                      <div key={p.positionAddress || i} className={'pcard ' + (win ? 'pcard-g' : 'pcard-r')}>
+                      <div key={p.positionAddress || i} className={'pcard ' + (win ? 'pcard-g' : 'pcard-r')} onClick={() => setSelected(p)}>
                         <div className="pcard-top">
                           <span className="br">{p.pair}</span>
                           <span className={win ? 'gr' : 'rd'}>{m(p.pnlSol, {})}</span>
@@ -186,6 +188,10 @@ export default function Dashboard({ wallet, data, onReset }) {
       </div>
 
       <div className="foot dim">data: meteora portfolio api · {data.demo ? 'demo' : shortAddr(wallet)}</div>
+
+      {selected && (
+        <PositionModal position={selected} cur={cur} solUsd={solUsd} usdIdr={usdIdr} onClose={() => setSelected(null)} />
+      )}
     </div>
   );
 }
