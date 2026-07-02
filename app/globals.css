@@ -221,11 +221,12 @@ html, body {
   border-radius: 6px; padding: 4px 7px; background: #202a44; border: 1px solid #38456b;
 }
 .wkcell .wkl { font-size: 8.5px; color: #8a97c2; }
-.wkcell .wkv { font-size: 10.5px; }
+.wkcell .wkv { font-size: 10.5px; white-space: nowrap; }
 .totrow { margin-top: 3px; margin-bottom: 0; }
 .totcell {
   border-radius: 6px; padding: 6px 4px; text-align: center; font-size: 10px;
   background: #1a2136; border: 1px solid #2b3556;
+  white-space: nowrap; overflow: hidden;
 }
 .totcell.grand { background: #202a44; border: 1px solid #38456b; }
 
