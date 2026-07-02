@@ -83,7 +83,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
           <span className="cd">{day}</span>
           <div className="cc-bot">
             <span className="cpos">{cell.c} pos</span>
-            <span className="cv">{cval(cell.v, { compact: true, unit: false })}</span>
+            <span className="cv">{cval(cell.v, { compact: true, bare: true })}</span>
           </div>
         </div>
       );
@@ -94,7 +94,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
         {dayCells}
         <div className="wkcell">
           <span className="wkl">W{wi + 1}</span>
-          <span className={'wkv ' + (wt >= 0 ? 'gr' : 'rd')}>{cval(wt, { compact: true, unit: false })}</span>
+          <span className={'wkv ' + (wt >= 0 ? 'gr' : 'rd')}>{cval(wt, { compact: true, bare: true })}</span>
         </div>
       </div>
     );
@@ -122,9 +122,9 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
           {rows}
           <div className="cg8 totrow">
             {weekdayTotals.map((t, ci) => (
-              <div key={ci} className="totcell"><span className={t >= 0 ? 'gr' : 'rd'}>{cval(t, { compact: true, unit: false })}</span></div>
+              <div key={ci} className="totcell"><span className={t >= 0 ? 'gr' : 'rd'}>{cval(t, { compact: true, bare: true })}</span></div>
             ))}
-            <div className="totcell grand"><span className={M.total >= 0 ? 'gr' : 'rd'}>{cval(M.total, { compact: true, unit: false })}</span></div>
+            <div className="totcell grand"><span className={M.total >= 0 ? 'gr' : 'rd'}>{cval(M.total, { compact: true, bare: true })}</span></div>
           </div>
         </div>
       </div>
