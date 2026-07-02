@@ -27,10 +27,20 @@ function priceAt(cs, t) {
   for (const c of cs) { if (c.t <= t) b = c; else break; }
   return b.c;
 }
-function idxAt(cs, t) {
-  let bi = 0;
-  for (let i = 0; i < cs.length; i++) { if (cs[i].t <= t) bi = i; else break; }
-  return bi;
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+// pill: rect terang + teks dua-tone (tag abu, nilai gelap)
+function Pill({ y, leftX, rightX, tag, value }) {
+  const w = Math.max(46, (tag + ' ' + value).length * 5.6 + 14);
+  const x = leftX != null ? leftX : rightX - w;
+  return (
+    <g>
+      <rect x={x} y={y - 9} width={w} height={18} rx="4" fill="#e7ebf2" />
+      <text x={x + 7} y={y + 3.5} fontSize="9.5">
+        <tspan fill="#5b6472">{tag} </tspan><tspan fill="#0f1622">{value}</tspan>
+      </text>
+    </g>
+  );
 }
 
 export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }) {
@@ -74,7 +84,9 @@ export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }
 
   let chart = null;
   if (cs.length) {
-    const W = 440, H = 200, pl = 6, pr = 6, pt = 16, pb = 10;
+    const W = 440, H = 210, pl = 6, pr = 6, pt = 24, pb = 22;
+    const RX = Math.round(W * 0.56);   // batas kiri kotak range
+    const VX = Math.round(W * 0.9);    // garis vertikal + titik entry/exit
     const prices = [];
     for (const c of cs) prices.push(c.h, c.l);
     if (hasRange) prices.push(p.minPrice, p.maxPrice);
@@ -82,22 +94,27 @@ export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }
     if (exitP) prices.push(exitP);
     let pMin = Math.min(...prices), pMax = Math.max(...prices);
     if (pMax === pMin) { pMax *= 1.01; pMin *= 0.99; }
-    const padP = (pMax - pMin) * 0.08 || pMax * 0.01;
+    const padP = (pMax - pMin) * 0.06 || pMax * 0.01;
     pMin -= padP; pMax += padP;
     const iW = W - pl - pr, iH = H - pt - pb;
     const n = cs.length, step = iW / n;
     const cx = (i) => pl + step * (i + 0.5);
     const y = (v) => pt + ((pMax - v) / (pMax - pMin)) * iH;
+    const yEntry = entryP ? y(entryP) : null;
+    const yExit = exitP ? y(exitP) : null;
+    let peY = yEntry != null ? clamp(yEntry, 11, H - 11) : null;
+    let pxY = yExit != null ? clamp(yExit, 11, H - 11) : null;
+    if (peY != null && pxY != null && Math.abs(peY - pxY) < 19) {
+      const mid = (peY + pxY) / 2;
+      if (peY <= pxY) { peY = mid - 10; pxY = mid + 10; } else { peY = mid + 10; pxY = mid - 10; }
+      peY = clamp(peY, 11, H - 11); pxY = clamp(pxY, 11, H - 11);
+    }
     chart = {
-      W, H, cx, y,
-      bw: Math.max(2, Math.min(13, step * 0.6)),
-      yHigh: hasRange ? y(p.maxPrice) : null,
-      yLow: hasRange ? y(p.minPrice) : null,
-      ei: idxAt(cs, p.createdAt), xi: idxAt(cs, p.closedAt),
-      yEntry: entryP ? y(entryP) : null, yExit: exitP ? y(exitP) : null,
+      W, H, pt, pb, RX, VX, cx, y, bw: Math.max(3, Math.min(14, step * 0.6)),
+      yHigh: hasRange ? y(p.maxPrice) : null, yLow: hasRange ? y(p.minPrice) : null,
+      yEntry, yExit, peY, pxY,
     };
   }
-  const anchor = (x, W) => (x < 54 ? 'start' : x > W - 54 ? 'end' : 'middle');
 
   const meteora = 'https://app.meteora.ag/dlmm/' + p.poolAddress;
   const solscan = p.positionAddress ? 'https://solscan.io/account/' + p.positionAddress : null;
@@ -133,13 +150,24 @@ export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }
               <div className="md-chart-msg">chart tidak tersedia untuk pool ini</div>
             ) : (
               <svg viewBox={`0 0 ${chart.W} ${chart.H}`} style={{ width: '100%', height: 'auto' }} role="img" aria-label="candlestick posisi">
+                <defs>
+                  <linearGradient id="rngbox" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stopColor="#8b7ff0" stopOpacity="0.36" />
+                    <stop offset="1" stopColor="#6b5bd0" stopOpacity="0.08" />
+                  </linearGradient>
+                </defs>
+
+                {/* range box: bagian kanan + garis HIGH/LOW melintang */}
                 {hasRange && (
                   <>
-                    <rect x="0" y={chart.yHigh} width={chart.W} height={Math.max(0, chart.yLow - chart.yHigh)} fill="#8b7ff0" opacity="0.13" />
+                    <rect x={chart.RX} y={chart.yHigh} width={chart.W - chart.RX} height={Math.max(0, chart.yLow - chart.yHigh)} fill="url(#rngbox)" />
+                    <line x1={chart.RX} y1={chart.pt - 4} x2={chart.RX} y2={chart.H - chart.pb + 4} stroke="#8b7ff0" strokeWidth="1" opacity="0.4" />
                     <line x1="0" y1={chart.yHigh} x2={chart.W} y2={chart.yHigh} stroke="#c9d1d9" strokeWidth="1" strokeDasharray="5 4" opacity="0.5" />
                     <line x1="0" y1={chart.yLow} x2={chart.W} y2={chart.yLow} stroke="#c9d1d9" strokeWidth="1" strokeDasharray="5 4" opacity="0.5" />
                   </>
                 )}
+
+                {/* candles */}
                 {cs.map((c, i) => {
                   const col = c.c >= c.o ? '#3fb950' : '#f85149';
                   const x = chart.cx(i);
@@ -151,30 +179,25 @@ export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }
                     </g>
                   );
                 })}
-                {hasRange && (
-                  <>
-                    <text x="6" y={Math.max(11, chart.yHigh - 4)} fontSize="9.5" fill="#a99cf5" stroke="#0b0e13" strokeWidth="2.5" style={{ paintOrder: 'stroke' }}>HIGH {fmtPriceShort(p.maxPrice)}</text>
-                    <text x="6" y={Math.min(chart.H - 3, chart.yLow + 12)} fontSize="9.5" fill="#a99cf5" stroke="#0b0e13" strokeWidth="2.5" style={{ paintOrder: 'stroke' }}>LOW {fmtPriceShort(p.minPrice)}</text>
-                  </>
-                )}
-                {chart.yEntry != null && (
-                  <>
-                    <line x1={chart.cx(chart.ei)} y1="12" x2={chart.cx(chart.ei)} y2={chart.H - 6} stroke="#3fb950" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
-                    <circle cx={chart.cx(chart.ei)} cy={chart.yEntry} r="4.5" fill="#3fb950" stroke="#0b0e13" strokeWidth="1.5" />
-                    <text x={chart.cx(chart.ei)} y={chart.yEntry - 8} fontSize="9" fill="#3fb950" textAnchor={anchor(chart.cx(chart.ei), chart.W)} stroke="#0b0e13" strokeWidth="2.5" style={{ paintOrder: 'stroke' }}>entry {fmtPriceShort(entryP)}</text>
-                  </>
-                )}
-                {chart.yExit != null && (
-                  <>
-                    <line x1={chart.cx(chart.xi)} y1="12" x2={chart.cx(chart.xi)} y2={chart.H - 6} stroke="#e6edf3" strokeWidth="1" strokeDasharray="3 3" opacity="0.35" />
-                    <circle cx={chart.cx(chart.xi)} cy={chart.yExit} r="4.5" fill="#e6edf3" stroke="#0b0e13" strokeWidth="1.5" />
-                    <text x={chart.cx(chart.xi)} y={chart.yExit - 8} fontSize="9" fill="#e6edf3" textAnchor={anchor(chart.cx(chart.xi), chart.W)} stroke="#0b0e13" strokeWidth="2.5" style={{ paintOrder: 'stroke' }}>exit {fmtPriceShort(exitP)}</text>
-                  </>
-                )}
+
+                {/* garis vertikal (kanan) + titik entry/exit */}
+                <line x1={chart.VX} y1="12" x2={chart.VX} y2={chart.H - 8} stroke="#c9d1d9" strokeWidth="1" strokeDasharray="4 4" opacity="0.45" />
+                {chart.yExit != null && <circle cx={chart.VX} cy={chart.yExit} r="5" fill="#0b0e13" stroke="#e6edf3" strokeWidth="2" />}
+                {chart.yEntry != null && <circle cx={chart.VX} cy={chart.yEntry} r="5" fill="#0b0e13" stroke="#e6edf3" strokeWidth="2" />}
+
+                {/* konektor pill->titik bila digeser */}
+                {chart.yExit != null && Math.abs(chart.pxY - chart.yExit) > 2 && <line x1={chart.VX} y1={chart.yExit} x2={chart.VX - 6} y2={chart.pxY} stroke="#8b949e" strokeWidth="1" opacity="0.5" />}
+                {chart.yEntry != null && Math.abs(chart.peY - chart.yEntry) > 2 && <line x1={chart.VX} y1={chart.yEntry} x2={chart.VX - 6} y2={chart.peY} stroke="#8b949e" strokeWidth="1" opacity="0.5" />}
+
+                {/* pills */}
+                {hasRange && <Pill y={clamp(chart.yHigh, 11, chart.H - 11)} leftX={4} tag="HIGH" value={fmtPriceShort(p.maxPrice)} />}
+                {hasRange && <Pill y={clamp(chart.yLow, 11, chart.H - 11)} leftX={4} tag="LOW" value={fmtPriceShort(p.minPrice)} />}
+                {chart.yExit != null && <Pill y={chart.pxY} rightX={chart.VX - 8} tag="EXIT" value={fmtPriceShort(exitP)} />}
+                {chart.yEntry != null && <Pill y={chart.peY} rightX={chart.VX - 8} tag="ENTRY" value={fmtPriceShort(entryP)} />}
               </svg>
             )}
             <div className="md-chart-note">
-              {cs.length > 0 && <>candle {oh.timeframe} · </>}<span style={{ color: '#a99cf5' }}>kotak</span> = range bin · <span style={{ color: '#3fb950' }}>●</span> entry · <span style={{ color: '#e6edf3' }}>●</span> exit
+              {cs.length > 0 && <>candle {oh.timeframe} · </>}<span style={{ color: '#a99cf5' }}>kotak</span> = range bin · badge = status harga vs range
             </div>
           </div>
 
