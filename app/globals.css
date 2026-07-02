@@ -268,6 +268,35 @@ html, body {
 
 .foot { font-size: 11px; text-align: center; margin-top: 22px; }
 
+/* ---------- position modal ---------- */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(3,5,8,.62);
+  display: flex; align-items: center; justify-content: center; padding: 16px; z-index: 50;
+}
+.modal-card { width: 420px; max-width: 100%; max-height: 90vh; overflow-y: auto; }
+.modal-x { margin-left: auto; background: transparent; border: none; color: var(--dim); font-size: 14px; cursor: pointer; line-height: 1; }
+.modal-x:hover { color: var(--text); }
+.modal-body { padding: 15px 16px; }
+.md-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+.md-pair { font-size: 18px; font-weight: 500; }
+.md-sub { font-size: 11px; margin-top: 2px; }
+.md-pnl { font-size: 22px; line-height: 1; }
+.md-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 18px; font-size: 12.5px; margin-bottom: 13px; }
+.md-row { display: flex; justify-content: space-between; }
+.md-range { border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-bottom: 13px; }
+.md-range-head { display: flex; justify-content: space-between; font-size: 10.5px; margin-bottom: 8px; }
+.md-bar { position: relative; height: 12px; border-radius: 6px; background: #1c2740; border: 1px solid #2a3038; }
+.md-mark { position: absolute; top: -2px; bottom: -2px; width: 2px; background: #e6edf3; }
+.md-range-lbl { display: flex; justify-content: space-between; font-size: 11.5px; margin-top: 7px; }
+.md-actions { display: flex; gap: 8px; }
+.md-btn { flex: 1; text-align: center; border: 1px solid var(--border); border-radius: 7px; padding: 8px; font-size: 12px; color: #c9d1d9; text-decoration: none; }
+.md-btn:hover { background: #161b22; color: var(--text); }
+.md-hint { font-size: 9.5px; margin-top: 11px; text-align: center; }
+
+.pos-row { cursor: pointer; }
+.pos-row:hover td { background: #161b22; }
+.pcard { cursor: pointer; }
+
 /* ---------- responsive ---------- */
 @media (max-width: 720px) {
   .wrap { padding: 16px 12px 44px; }
