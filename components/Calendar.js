@@ -82,7 +82,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
         <div key={col} className={'cc ' + tierClass(cell.v, maxAbs)} title={cval(cell.v, {}) + ' · ' + cell.c + ' pos'}>
           <span className="cd">{day}</span>
           <div className="cc-bot">
-            <span className="cpos">{cell.c}p</span>
+            <span className="cpos">{cell.c} pos</span>
             <span className="cv">{cval(cell.v, { compact: true, unit: false })}</span>
           </div>
         </div>
