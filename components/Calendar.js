@@ -124,7 +124,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
             {weekdayTotals.map((t, ci) => (
               <div key={ci} className="totcell"><span className={t >= 0 ? 'gr' : 'rd'}>{cval(t, { compact: true, bare: true })}</span></div>
             ))}
-            <div className="totcell grand"><span className={M.total >= 0 ? 'gr' : 'rd'}>{cval(M.total, { compact: true, bare: true })}</span></div>
+            <div />
           </div>
         </div>
       </div>
