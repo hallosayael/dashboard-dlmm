@@ -278,10 +278,19 @@ html, body {
   .row2 .panel { margin-bottom: 0; }
   .pos-desktop { display: none; }
   .pos-mobile { display: block; }
-  .cc { min-height: 42px; padding: 4px 5px; }
-  .cc .cv { font-size: 8.5px; }
-  .cc .cd { font-size: 9px; }
-  .cg { gap: 4px; }
+  /* kalender: muat penuh layar HP, tanpa scroll samping */
+  .cal-scroll { overflow-x: visible; }
+  .cal-grid { min-width: 0; }
+  .cg8, .cg { gap: 3px; margin-bottom: 3px; }
+  .cc { min-height: 40px; padding: 3px 4px; overflow: hidden; }
+  .cc .cv { font-size: 8px; white-space: nowrap; }
+  .cc .cd { font-size: 8.5px; }
+  .cpos { display: none; }
+  .wd, .wd.wkh { font-size: 8px; padding-left: 1px; }
+  .wkcell { padding: 3px 4px; }
+  .wkcell .wkl { font-size: 7.5px; }
+  .wkcell .wkv { font-size: 8.5px; }
+  .totcell { padding: 4px 2px; font-size: 8px; }
   .promptline { font-size: 12px; }
   .ttl { font-size: 11px; }
   .actions { flex-direction: column; }
