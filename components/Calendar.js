@@ -19,14 +19,16 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
       const { y, m, d } = tzYMD(p.closedAt, TZ);
       const key = y + '-' + String(m).padStart(2, '0');
       if (!map[key]) map[key] = { y, m, days: {} };
-      map[key].days[d] = (map[key].days[d] || 0) + p.pnlSol;
+      const cell = map[key].days[d] || (map[key].days[d] = { v: 0, c: 0 });
+      cell.v += p.pnlSol;
+      cell.c += 1;
     }
     const months = Object.keys(map).sort();
     for (const k of months) {
       const o = map[k];
       let total = 0, green = 0, red = 0;
       for (const d in o.days) {
-        const v = o.days[d];
+        const v = o.days[d].v;
         total += v;
         if (v >= 0) green++; else red++;
       }
@@ -47,26 +49,55 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
   const firstWeekday = new Date(Date.UTC(M.y, M.m, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(M.y, M.m + 1, 0)).getUTCDate();
   let maxAbs = 0;
-  for (const d in M.days) maxAbs = Math.max(maxAbs, Math.abs(M.days[d]));
+  for (const d in M.days) maxAbs = Math.max(maxAbs, Math.abs(M.days[d].v));
   const winRate = M.green + M.red > 0 ? (M.green / (M.green + M.red)) * 100 : 0;
   const cval = (v, o) => fmtMoney(v, cur, solUsd, usdIdr, o);
 
-  const cells = [];
-  for (let i = 0; i < firstWeekday; i++) cells.push(<div key={'b' + i} className="cc ce" />);
+  const numWeeks = Math.ceil((firstWeekday + daysInMonth) / 7);
+  const weekTotals = new Array(numWeeks).fill(0);
+  const weekdayTotals = new Array(7).fill(0);
   for (let day = 1; day <= daysInMonth; day++) {
-    const v = M.days[day];
-    if (v === undefined) {
-      cells.push(
-        <div key={day} className="cc ce"><span className="cd">{day}</span><span className="cv" /></div>
-      );
-    } else {
-      cells.push(
-        <div key={day} className={'cc ' + tierClass(v, maxAbs)} title={cval(v, {})}>
+    const cell = M.days[day];
+    if (!cell) continue;
+    const pos = firstWeekday + day - 1;
+    weekTotals[Math.floor(pos / 7)] += cell.v;
+    weekdayTotals[pos % 7] += cell.v;
+  }
+
+  const rows = [];
+  for (let wi = 0; wi < numWeeks; wi++) {
+    const dayCells = [];
+    for (let col = 0; col < 7; col++) {
+      const day = wi * 7 + col - firstWeekday + 1;
+      if (day < 1 || day > daysInMonth) {
+        dayCells.push(<div key={col} className="cc ce" />);
+        continue;
+      }
+      const cell = M.days[day];
+      if (!cell) {
+        dayCells.push(<div key={col} className="cc ce"><span className="cd">{day}</span></div>);
+        continue;
+      }
+      dayCells.push(
+        <div key={col} className={'cc ' + tierClass(cell.v, maxAbs)} title={cval(cell.v, {}) + ' · ' + cell.c + ' pos'}>
           <span className="cd">{day}</span>
-          <span className="cv">{cval(v, { compact: true, unit: false })}</span>
+          <div className="cc-bot">
+            <span className="cpos">{cell.c}p</span>
+            <span className="cv">{cval(cell.v, { compact: true, unit: false })}</span>
+          </div>
         </div>
       );
     }
+    const wt = weekTotals[wi];
+    rows.push(
+      <div className="cg8" key={wi}>
+        {dayCells}
+        <div className="wkcell">
+          <span className="wkl">W{wi + 1}</span>
+          <span className={'wkv ' + (wt >= 0 ? 'gr' : 'rd')}>{cval(wt, { compact: true, unit: false })}</span>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -82,8 +113,21 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
         </span>
       </div>
 
-      <div className="cg wdrow">{WD.map((w) => <div key={w} className="wd">{w}</div>)}</div>
-      <div className="cg">{cells}</div>
+      <div className="cal-scroll">
+        <div className="cal-grid">
+          <div className="cg8 wdrow">
+            {WD.map((w) => <div key={w} className="wd">{w}</div>)}
+            <div className="wd wkh">WEEK</div>
+          </div>
+          {rows}
+          <div className="cg8 totrow">
+            {weekdayTotals.map((t, ci) => (
+              <div key={ci} className="totcell"><span className={t >= 0 ? 'gr' : 'rd'}>{cval(t, { compact: true, unit: false })}</span></div>
+            ))}
+            <div className="totcell grand"><span className={M.total >= 0 ? 'gr' : 'rd'}>{cval(M.total, { compact: true, unit: false })}</span></div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
