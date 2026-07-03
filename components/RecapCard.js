@@ -78,21 +78,25 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
     setBusy(true);
     try {
       const node = cardRef.current;
-      // pastikan semua logo token sudah termuat sebelum capture
+      // tunggu logo token termuat, tapi jangan menggantung (broken img / lambat)
       const imgs = Array.from(node.querySelectorAll('img'));
-      await Promise.all(imgs.map((img) => (img.complete && img.naturalWidth)
-        ? Promise.resolve()
-        : new Promise((res) => { img.onload = res; img.onerror = res; })));
+      await Promise.all(imgs.map((img) => new Promise((res) => {
+        if (img.complete) return res(); // sudah selesai (termasuk yg gagal)
+        img.onload = res;
+        img.onerror = res;
+        setTimeout(res, 4000); // batas aman
+      })));
 
       const { toPng } = await import('html-to-image');
-      // render dua kali: kali pertama menghangatkan cache gambar
-      await toPng(node, { pixelRatio: 1, backgroundColor: '#0e1116' });
-      const url = await toPng(node, {
-        pixelRatio: 2,
-        width: node.offsetWidth,
-        height: node.offsetHeight,
-        backgroundColor: '#0e1116',
-      });
+      const url = await Promise.race([
+        toPng(node, {
+          pixelRatio: 2,
+          width: node.offsetWidth,
+          height: node.offsetHeight,
+          backgroundColor: '#0e1116',
+        }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000)),
+      ]);
       const a = document.createElement('a');
       a.download = `dlmm-recap-${range}.png`;
       a.href = url;
@@ -100,8 +104,9 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
     } catch (e) {
       console.error(e);
       alert('gagal membuat gambar — coba screenshot manual');
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   }
 
   return (
