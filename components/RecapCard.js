@@ -78,7 +78,14 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
     setBusy(true);
     try {
       const { toPng } = await import('html-to-image');
-      const url = await toPng(cardRef.current, { pixelRatio: 2, backgroundColor: '#0e1116', cacheBust: true });
+      const node = cardRef.current;
+      const url = await toPng(node, {
+        pixelRatio: 2,
+        width: node.offsetWidth,
+        height: node.offsetHeight,
+        backgroundColor: '#0e1116',
+        cacheBust: true,
+      });
       const a = document.createElement('a');
       a.download = `dlmm-recap-${range}.png`;
       a.href = url;
@@ -102,7 +109,8 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
             <div className={'recap-total ' + totalCls}>{m(data.totalPnl, { dp: 3 })}</div>
           </div>
 
-          <svg viewBox={`0 0 ${W} ${H}`} className="recap-svg" role="img" aria-label="equity curve recap">
+          <div className="recap-chartwrap">
+          <svg viewBox={`0 0 ${W} ${H}`} width={W} height={H} className="recap-svg" role="img" aria-label="equity curve recap">
             <defs>
               <linearGradient id="recapfill" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0" stopColor="#8b7ff0" stopOpacity="0.32" />
@@ -116,7 +124,6 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
             {pts.map((p, i) => {
               if (!data.markerSet.has(i) || !p.pos) return null;
               const cx = X(i), cy = Y(p.v), r = 9;
-              const url = iconUrl(p.pos.icon);
               const showPill = data.pillSet.has(i);
               const winP = p.pos.pnlSol >= 0;
               return (
@@ -127,13 +134,7 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
                       <text x={cx} y={winP ? cy - 19 : cy + 25} fontSize="9" textAnchor="middle" fill={winP ? '#166a45' : '#df7a72'}>{m(p.pos.pnlSol, { dp: 3, bare: true })}</text>
                     </g>
                   )}
-                  {url ? (
-                    <>
-                      <clipPath id={`clip${i}`}><circle cx={cx} cy={cy} r={r} /></clipPath>
-                      <image href={url} x={cx - r} y={cy - r} width={r * 2} height={r * 2} clipPath={`url(#clip${i})`} preserveAspectRatio="xMidYMid slice" />
-                      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#e6edf3" strokeWidth="1.5" />
-                    </>
-                  ) : (
+                  {!p.pos.icon && (
                     <>
                       <circle cx={cx} cy={cy} r={r} fill={PALETTE[i % PALETTE.length]} stroke="#0b0e13" strokeWidth="1.5" />
                       <text x={cx} y={cy + 3.5} fontSize="9" textAnchor="middle" fill="#0b0e13" fontWeight="500">{(p.pos.pair || '?')[0]}</text>
@@ -143,6 +144,14 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
               );
             })}
           </svg>
+          {pts.map((p, i) => {
+            if (!data.markerSet.has(i) || !p.pos || !p.pos.icon) return null;
+            return (
+              <img key={i} className="recap-marker" src={iconUrl(p.pos.icon)} alt=""
+                style={{ left: (X(i) / W * 100) + '%', top: (Y(p.v) / H * 100) + '%' }} />
+            );
+          })}
+          </div>
 
           <div className="recap-stats">
             <div><div className="rl">VOLUME</div><div className="gr">{m(data.volume, { sign: false, bare: true, dp: 1 })}</div></div>
