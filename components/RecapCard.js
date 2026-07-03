@@ -123,16 +123,17 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
           width: node.offsetWidth,
           height: node.offsetHeight,
           backgroundColor: '#0e1116',
+          skipFonts: true, // hindari hang/error saat embed font (stylesheet lintas-domain)
         }),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 15000)),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 25s')), 25000)),
       ]);
       const a = document.createElement('a');
       a.download = `dlmm-recap-${range}.png`;
       a.href = url;
       a.click();
     } catch (e) {
-      console.error(e);
-      alert('gagal membuat gambar — coba screenshot manual');
+      console.error('[recap download]', e);
+      alert('gagal membuat gambar: ' + (e && e.message ? e.message : e) + '\n(coba screenshot manual)');
     } finally {
       setBusy(false);
     }
