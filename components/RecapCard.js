@@ -124,6 +124,7 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
           height: node.offsetHeight,
           backgroundColor: '#0e1116',
           skipFonts: true, // hindari hang/error saat embed font (stylesheet lintas-domain)
+          imagePlaceholder: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M8AAAMBAQDJ/pLvAAAAAElFTkSuQmCC',
         }),
         new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 25s')), 25000)),
       ]);
@@ -176,7 +177,7 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
                       <text x={cx} y={winP ? cy - 19 : cy + 25} fontSize="9" textAnchor="middle" fill={winP ? '#166a45' : '#df7a72'}>{m(p.pos.pnlSol, { dp: 3, bare: true })}</text>
                     </g>
                   )}
-                  {!p.pos.icon && (
+                  {!iconData[p.pos.icon] && (
                     <>
                       <circle cx={cx} cy={cy} r={r} fill={PALETTE[i % PALETTE.length]} stroke="#0b0e13" strokeWidth="1.5" />
                       <text x={cx} y={cy + 3.5} fontSize="9" textAnchor="middle" fill="#0b0e13" fontWeight="500">{(p.pos.pair || '?')[0]}</text>
@@ -187,9 +188,9 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
             })}
           </svg>
           {pts.map((p, i) => {
-            if (!data.markerSet.has(i) || !p.pos || !p.pos.icon) return null;
+            if (!data.markerSet.has(i) || !p.pos || !iconData[p.pos.icon]) return null;
             return (
-              <img key={i} className="recap-marker" src={iconData[p.pos.icon] || iconUrl(p.pos.icon)} alt=""
+              <img key={i} className="recap-marker" src={iconData[p.pos.icon]} alt=""
                 style={{ left: (X(i) / W * 100) + '%', top: (Y(p.v) / H * 100) + '%' }} />
             );
           })}
