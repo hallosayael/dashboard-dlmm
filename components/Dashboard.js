@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Calendar from './Calendar';
 import Chart from './Chart';
 import PositionModal from './PositionModal';
+import RecapCard from './RecapCard';
 import { fmtMoney, fmtPct, shortAddr, sinceStr } from '../lib/format';
 
 const PAGE_SIZE = 15;
@@ -29,6 +30,7 @@ export default function Dashboard({ wallet, data, onReset }) {
   const [view, setView] = useState('chart');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
+  const [showRecap, setShowRecap] = useState(false);
 
   const m = (sol, o) => fmtMoney(sol, cur, solUsd, usdIdr, o);
 
@@ -95,7 +97,7 @@ export default function Dashboard({ wallet, data, onReset }) {
               <div className="statusline">
                 <span className="ctl"><span className="clbl">denom</span><Seg value={cur} options={['sol', 'usd', 'idr']} onChange={setCur} /></span>
                 <span className="ctl"><span className="clbl">range</span><Seg value={range} options={['7d', '30d', 'all']} onChange={setRange} /></span>
-                <span className="dim slnote">filter global · summary + breakdown + chart</span>
+                <button className="sharebtn" onClick={() => setShowRecap(true)}>↗ share</button>
               </div>
 
               <div className="row2">
@@ -191,6 +193,10 @@ export default function Dashboard({ wallet, data, onReset }) {
 
       {selected && (
         <PositionModal position={selected} cur={cur} solUsd={solUsd} usdIdr={usdIdr} onClose={() => setSelected(null)} />
+      )}
+
+      {showRecap && (
+        <RecapCard positions={ranged} cur={cur} solUsd={solUsd} usdIdr={usdIdr} range={range} wallet={wallet} onClose={() => setShowRecap(false)} />
       )}
     </div>
   );
