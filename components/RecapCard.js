@@ -77,14 +77,21 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
     if (!cardRef.current) return;
     setBusy(true);
     try {
-      const { toPng } = await import('html-to-image');
       const node = cardRef.current;
+      // pastikan semua logo token sudah termuat sebelum capture
+      const imgs = Array.from(node.querySelectorAll('img'));
+      await Promise.all(imgs.map((img) => (img.complete && img.naturalWidth)
+        ? Promise.resolve()
+        : new Promise((res) => { img.onload = res; img.onerror = res; })));
+
+      const { toPng } = await import('html-to-image');
+      // render dua kali: kali pertama menghangatkan cache gambar
+      await toPng(node, { pixelRatio: 1, backgroundColor: '#0e1116' });
       const url = await toPng(node, {
         pixelRatio: 2,
         width: node.offsetWidth,
         height: node.offsetHeight,
         backgroundColor: '#0e1116',
-        cacheBust: true,
       });
       const a = document.createElement('a');
       a.download = `dlmm-recap-${range}.png`;
