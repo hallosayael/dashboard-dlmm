@@ -127,7 +127,9 @@ html, body {
 .recap-kicker { font-size: 11px; color: #6e7681; letter-spacing: .08em; }
 .recap-sub { font-size: 11px; margin-top: 3px; }
 .recap-total { font-size: 30px; font-weight: 500; line-height: 1; white-space: nowrap; }
-.recap-svg { width: 100%; height: auto; margin: 4px 0 6px; display: block; }
+.recap-chartwrap { position: relative; margin: 4px 0 6px; }
+.recap-svg { width: 100%; height: auto; display: block; }
+.recap-marker { position: absolute; width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #e6edf3; transform: translate(-50%, -50%); object-fit: cover; background: #0b0e13; }
 .recap-stats { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px 6px; border-top: 1px solid #1b2128; padding-top: 12px; margin-top: 6px; }
 .recap-stats .rl { font-size: 8.5px; color: #6e7681; letter-spacing: .06em; }
 .recap-stats > div > div:last-child { font-size: 13px; margin-top: 3px; }
