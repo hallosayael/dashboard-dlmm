@@ -20,12 +20,41 @@ function fmtHold(sec) {
 export default function RecapCard({ positions, cur, solUsd, usdIdr, range, wallet, onClose }) {
   const cardRef = useRef(null);
   const [busy, setBusy] = useState(false);
+  const [iconData, setIconData] = useState({}); // urlAsli -> dataURL (base64)
 
   useEffect(() => {
     const h = (e) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, [onClose]);
+
+  // Pre-load semua logo token jadi data-URL supaya konsisten & aman saat export PNG.
+  useEffect(() => {
+    let alive = true;
+    const urls = [...new Set(positions.filter((p) => p.icon).map((p) => p.icon))];
+    Promise.all(urls.map(async (u) => {
+      try {
+        const r = await fetch(`/api/icon?u=${encodeURIComponent(u)}`);
+        if (!r.ok) return null;
+        const blob = await r.blob();
+        const dataUrl = await new Promise((res) => {
+          const fr = new FileReader();
+          fr.onload = () => res(fr.result);
+          fr.onerror = () => res(null);
+          fr.readAsDataURL(blob);
+        });
+        return dataUrl ? [u, dataUrl] : null;
+      } catch {
+        return null;
+      }
+    })).then((pairs) => {
+      if (!alive) return;
+      const map = {};
+      for (const pr of pairs) { if (pr) map[pr[0]] = pr[1]; }
+      setIconData(map);
+    });
+    return () => { alive = false; };
+  }, [positions]);
 
   const m = (sol, o) => fmtMoney(sol, cur, solUsd, usdIdr, o);
 
@@ -159,7 +188,7 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
           {pts.map((p, i) => {
             if (!data.markerSet.has(i) || !p.pos || !p.pos.icon) return null;
             return (
-              <img key={i} className="recap-marker" src={iconUrl(p.pos.icon)} alt=""
+              <img key={i} className="recap-marker" src={iconData[p.pos.icon] || iconUrl(p.pos.icon)} alt=""
                 style={{ left: (X(i) / W * 100) + '%', top: (Y(p.v) / H * 100) + '%' }} />
             );
           })}
