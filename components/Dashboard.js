@@ -24,6 +24,9 @@ export default function Dashboard({ wallet, data, onReset }) {
   const positions = data.positions || [];
   const solUsd = data.solPrice;
   const usdIdr = data.usdIdr;
+  const wallets = data.wallets || (wallet ? [wallet] : []);
+  const multi = wallets.length > 1;
+  const walletLabel = data.demo ? 'demo' : (multi ? wallets.length + ' wallets' : shortAddr(wallets[0] || wallet));
 
   const [cur, setCur] = useState('sol');
   const [range, setRange] = useState('30d');
@@ -57,6 +60,17 @@ export default function Dashboard({ wallet, data, onReset }) {
     return { n, totalPnl, totalFees, priceIl, wins, losses, winRate, best, worst, bdMax };
   }, [ranged]);
 
+  const perWallet = useMemo(() => {
+    if (!multi) return [];
+    const map = new Map(wallets.map((w) => [w, { wallet: w, pnl: 0, n: 0 }]));
+    for (const p of ranged) {
+      const o = map.get(p.owner);
+      if (!o) continue;
+      o.pnl += p.pnlSol; o.n += 1;
+    }
+    return [...map.values()].sort((a, b) => b.pnl - a.pnl);
+  }, [ranged, wallets, multi]);
+
   const pnlCls = s.totalPnl >= 0 ? 'gr' : 'rd';
 
   const totalPages = Math.max(1, Math.ceil(positions.length / PAGE_SIZE));
@@ -78,7 +92,7 @@ export default function Dashboard({ wallet, data, onReset }) {
           <div className="promptline">
             <span className="gr">meridian@dlmm</span><span className="dim">:</span>
             <span className="cy">~/closed</span><span className="dim">$ </span>
-            dlmm stats <span className="am">--wallet</span> {shortAddr(wallet)}{' '}
+            dlmm stats <span className="am">--wallet</span> {walletLabel}{' '}
             <span className="am">--closed</span> <span className="am">--denom</span> {cur}{' '}
             <span className="am">--range</span> {range}<span className="termcur" />
           </div>
@@ -119,6 +133,24 @@ export default function Dashboard({ wallet, data, onReset }) {
                 </div>
               </div>
 
+              {multi && (
+                <div className="panel">
+                  <div className="plabel">─ per wallet · {range}</div>
+                  {perWallet.map((w) => (
+                    <div className="srow" key={w.wallet}>
+                      <span className="dim">{shortAddr(w.wallet)} <span className="wsub">· {w.n} closed</span></span>
+                      <span className={w.pnl >= 0 ? 'gr' : 'rd'}>{m(w.pnl, { compact: true })}</span>
+                    </div>
+                  ))}
+                  {data.failed && data.failed.length > 0 && data.failed.map((f) => (
+                    <div className="srow" key={f.wallet}>
+                      <span className="dim">{shortAddr(f.wallet)}</span>
+                      <span className="rd" style={{ fontSize: 11 }}>gagal dimuat</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
               <div className="panel">
                 <div className="perf-head">
                   <span className="plabel" style={{ marginBottom: 0 }}>─ performance · {range}</span>
@@ -142,7 +174,7 @@ export default function Dashboard({ wallet, data, onReset }) {
                         const win = p.pnlSol >= 0;
                         return (
                           <tr key={p.positionAddress || i} className="pos-row" onClick={() => setSelected(p)}>
-                            <td className="br">{p.pair}</td>
+                            <td className="br">{p.pair}{multi && p.owner && <span className="owner-tag">{shortAddr(p.owner)}</span>}</td>
                             <td className="dim">{sinceStr(p.closedAt)}</td>
                             <td>{m(p.depositSol, { compact: true, unit: false, sign: false })}</td>
                             <td className="gr">{m(p.feesSol, { compact: true, unit: false })}</td>
@@ -162,7 +194,7 @@ export default function Dashboard({ wallet, data, onReset }) {
                     return (
                       <div key={p.positionAddress || i} className={'pcard ' + (win ? 'pcard-g' : 'pcard-r')} onClick={() => setSelected(p)}>
                         <div className="pcard-top">
-                          <span className="br">{p.pair}</span>
+                          <span className="br">{p.pair}{multi && p.owner && <span className="owner-tag">{shortAddr(p.owner)}</span>}</span>
                           <span className={win ? 'gr' : 'rd'}>{m(p.pnlSol, {})}</span>
                         </div>
                         <div className="pcard-bot dim">
@@ -189,14 +221,14 @@ export default function Dashboard({ wallet, data, onReset }) {
         </div>
       </div>
 
-      <div className="foot dim">data: meteora portfolio api · {data.demo ? 'demo' : shortAddr(wallet)}</div>
+      <div className="foot dim">data: meteora portfolio api · {walletLabel}</div>
 
       {selected && (
         <PositionModal position={selected} cur={cur} solUsd={solUsd} usdIdr={usdIdr} onClose={() => setSelected(null)} />
       )}
 
       {showRecap && (
-        <RecapCard positions={ranged} cur={cur} solUsd={solUsd} usdIdr={usdIdr} range={range} wallet={wallet} onClose={() => setShowRecap(false)} />
+        <RecapCard positions={ranged} cur={cur} solUsd={solUsd} usdIdr={usdIdr} range={range} wallet={walletLabel} onClose={() => setShowRecap(false)} />
       )}
     </div>
   );
