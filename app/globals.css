@@ -269,6 +269,14 @@ html, body {
 }
 .winput:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px rgba(57,197,207,.15); }
 .winput.err { border-color: var(--red); }
+.wtext { min-height: 82px; resize: vertical; line-height: 1.6; font-family: inherit; }
+.wchips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.wchip { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; padding: 3px 9px; border-radius: 20px; border: 1px solid var(--border); color: var(--dim); }
+.wchip.ok { border-color: #245d33; color: var(--green); background: #10241a; }
+.wchip.bad { border-color: #5c2626; color: var(--red); background: #241315; }
+.wcount { font-size: 11px; margin-top: 8px; }
+.owner-tag { font-size: 10px; margin-left: 7px; color: #6e7681; }
+.wsub { color: #6e7681; font-size: 10.5px; }
 .actions { display: flex; gap: 9px; margin-top: 12px; }
 .btn {
   background: transparent;
