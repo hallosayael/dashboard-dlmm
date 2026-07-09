@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { fmtMoney, tzYMD, MONTH_NAMES } from '../lib/format';
 
 const TZ = 7; // GMT+7
@@ -19,9 +19,10 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
       const { y, m, d } = tzYMD(p.closedAt, TZ);
       const key = y + '-' + String(m).padStart(2, '0');
       if (!map[key]) map[key] = { y, m, days: {} };
-      const cell = map[key].days[d] || (map[key].days[d] = { v: 0, c: 0 });
+      const cell = map[key].days[d] || (map[key].days[d] = { v: 0, c: 0, w: 0 });
       cell.v += p.pnlSol;
       cell.c += 1;
+      if (p.pnlSol > 0) cell.w += 1;
     }
     const months = Object.keys(map).sort();
     for (const k of months) {
@@ -38,6 +39,17 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
   }, [positions]);
 
   const [idx, setIdx] = useState(months.length ? months.length - 1 : 0);
+  const [tip, setTip] = useState(null); // { day, v, c, w, top, left, pinned }
+
+  // tutup tooltip yang di-pin (mobile) saat tap di luar
+  useEffect(() => {
+    if (!tip?.pinned) return;
+    const h = (e) => {
+      if (!e.target.closest || (!e.target.closest('.cc') && !e.target.closest('.cal-tip'))) setTip(null);
+    };
+    document.addEventListener('click', h);
+    return () => document.removeEventListener('click', h);
+  }, [tip]);
 
   if (months.length === 0) {
     return <div className="dim" style={{ fontSize: 11, padding: '26px 0', textAlign: 'center' }}>belum ada data kalender</div>;
@@ -52,6 +64,11 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
   for (const d in M.days) maxAbs = Math.max(maxAbs, Math.abs(M.days[d].v));
   const winRate = M.green + M.red > 0 ? (M.green / (M.green + M.red)) * 100 : 0;
   const cval = (v, o) => fmtMoney(v, cur, solUsd, usdIdr, o);
+
+  const showTip = (day, cell, el, pin) => {
+    const r = el.getBoundingClientRect();
+    setTip({ day, v: cell.v, c: cell.c, w: cell.w, top: r.top, left: r.left + r.width / 2, pinned: pin });
+  };
 
   const numWeeks = Math.ceil((firstWeekday + daysInMonth) / 7);
   const weekTotals = new Array(numWeeks).fill(0);
@@ -79,7 +96,16 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
         continue;
       }
       dayCells.push(
-        <div key={col} className={'cc ' + tierClass(cell.v, maxAbs)} title={cval(cell.v, {}) + ' · ' + cell.c + ' pos'}>
+        <div
+          key={col}
+          className={'cc ' + tierClass(cell.v, maxAbs)}
+          onMouseEnter={(e) => { if (!tip?.pinned) showTip(day, cell, e.currentTarget, false); }}
+          onMouseLeave={() => setTip((t) => (t && t.pinned ? t : null))}
+          onClick={(e) => {
+            if (tip?.pinned && tip.day === day) setTip(null);
+            else showTip(day, cell, e.currentTarget, true);
+          }}
+        >
           <span className="cd">{day}</span>
           <div className="cc-bot">
             <span className="cpos">{cell.c} pos</span>
@@ -99,6 +125,8 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
       </div>
     );
   }
+
+  const clampedLeft = tip ? Math.max(96, Math.min((typeof window !== 'undefined' ? window.innerWidth : 9999) - 96, tip.left)) : 0;
 
   return (
     <div>
@@ -128,6 +156,15 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
           </div>
         </div>
       </div>
+
+      {tip && (
+        <div className="cal-tip" style={{ top: tip.top, left: clampedLeft }}>
+          <div className="cal-tip-date">{tip.day} {MONTH_NAMES[M.m]} {M.y}</div>
+          <div className="cal-tip-row"><span className="dim">daily pnl</span><span className={tip.v >= 0 ? 'gr' : 'rd'}>{cval(tip.v, {})}</span></div>
+          <div className="cal-tip-row"><span className="dim">positions</span><span>{tip.c} <span className="dim">({tip.w}W / {tip.c - tip.w}L)</span></span></div>
+          <div className="cal-tip-row"><span className="dim">win rate</span><span className="br">{tip.c ? Math.round((tip.w / tip.c) * 100) : 0}%</span></div>
+        </div>
+      )}
     </div>
   );
 }
