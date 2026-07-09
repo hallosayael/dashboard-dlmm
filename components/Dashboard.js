@@ -5,10 +5,12 @@ import Calendar from './Calendar';
 import Chart from './Chart';
 import PositionModal from './PositionModal';
 import RecapCard from './RecapCard';
+import AnalyzeModal from './AnalyzeModal';
 import { fmtMoney, fmtPct, shortAddr, sinceStr } from '../lib/format';
 
 const PAGE_SIZE = 15;
 const RANGE_DAYS = { '7d': 7, '30d': 30, all: Infinity };
+const ANALYZE_CMDS = ['wallet-health', 'pool-analysis', 'audit', 'compare', 'insight'];
 
 function Seg({ value, options, onChange }) {
   return (
@@ -34,6 +36,8 @@ export default function Dashboard({ wallet, data, onReset }) {
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
   const [showRecap, setShowRecap] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [tool, setTool] = useState(null);
 
   const m = (sol, o) => fmtMoney(sol, cur, solUsd, usdIdr, o);
 
@@ -111,7 +115,23 @@ export default function Dashboard({ wallet, data, onReset }) {
               <div className="statusline">
                 <span className="ctl"><span className="clbl">denom</span><Seg value={cur} options={['sol', 'usd', 'idr']} onChange={setCur} /></span>
                 <span className="ctl"><span className="clbl">range</span><Seg value={range} options={['7d', '30d', 'all']} onChange={setRange} /></span>
-                <button className="sharebtn" onClick={() => setShowRecap(true)}>↗ share</button>
+                <span className="sl-actions">
+                  <button className="sharebtn" onClick={() => setShowRecap(true)}>↗ share</button>
+                  <span className="analyze-wrap">
+                    <button className="analyzebtn" onClick={() => setMenuOpen((o) => !o)} aria-expanded={menuOpen}>analyze ▾</button>
+                    {menuOpen && (
+                      <>
+                        <div className="menu-catch" onClick={() => setMenuOpen(false)} />
+                        <div className="analyze-menu">
+                          <div className="mlbl">analyze</div>
+                          {ANALYZE_CMDS.map((c) => (
+                            <button key={c} className="mitem" onClick={() => { setTool(c); setMenuOpen(false); }}>[ {c} ]</button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </span>
+                </span>
               </div>
 
               <div className="row2">
@@ -229,6 +249,21 @@ export default function Dashboard({ wallet, data, onReset }) {
 
       {showRecap && (
         <RecapCard positions={ranged} cur={cur} solUsd={solUsd} usdIdr={usdIdr} range={range} wallet={walletLabel} onClose={() => setShowRecap(false)} />
+      )}
+
+      {tool && (
+        <AnalyzeModal
+          command={tool}
+          positions={ranged}
+          wallets={wallets}
+          cur={cur}
+          solUsd={solUsd}
+          usdIdr={usdIdr}
+          range={range}
+          walletLabel={walletLabel}
+          onSelectPosition={setSelected}
+          onClose={() => setTool(null)}
+        />
       )}
     </div>
   );
