@@ -250,6 +250,18 @@ html, body {
   white-space: nowrap; overflow: hidden;
 }
 .totcell.grand { background: #202a44; border: 1px solid #38456b; }
+.cc { cursor: pointer; }
+.cc.ce { cursor: default; }
+
+/* tooltip detail harian (hover desktop / tap HP) */
+.cal-tip {
+  position: fixed; z-index: 60; transform: translate(-50%, -100%); margin-top: -8px;
+  min-width: 168px; background: #12161d; border: 1px solid #38456b; border-radius: 8px;
+  padding: 9px 11px; font-family: var(--font-mono); font-size: 11px; color: var(--text);
+  box-shadow: 0 6px 20px rgba(0,0,0,.45);
+}
+.cal-tip-date { font-size: 11px; color: #a9b8e0; margin-bottom: 7px; letter-spacing: .02em; }
+.cal-tip-row { display: flex; justify-content: space-between; gap: 14px; padding: 1.5px 0; }
 
 /* ---------- landing ---------- */
 .landing-wrap { padding-top: 64px; }
