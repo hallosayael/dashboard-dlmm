@@ -347,6 +347,73 @@ html, body {
 .pos-row:hover td { background: #161b22; }
 .pcard { cursor: pointer; }
 
+/* ---------- analyze menu ---------- */
+.sl-actions { margin-left: auto; display: inline-flex; gap: 8px; align-items: center; }
+.analyze-wrap { position: relative; }
+.analyzebtn {
+  font-family: inherit; font-size: 11px; padding: 4px 13px; border-radius: 6px;
+  border: 1px solid #2a5f4a; background: #10241a; color: #52b98a; cursor: pointer;
+}
+.analyzebtn:hover { background: #13301d; }
+.menu-catch { position: fixed; inset: 0; z-index: 40; }
+.analyze-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 41; width: 186px;
+  background: #0e1116; border: 1px solid #2a3038; border-radius: 8px; padding: 7px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.45);
+}
+.analyze-menu .mlbl { color: #6e7681; font-size: 10.5px; letter-spacing: .06em; padding: 2px 6px 7px; }
+.mitem {
+  display: block; width: 100%; text-align: left; font-family: inherit; font-size: 12px;
+  padding: 6px 9px; border-radius: 5px; border: 1px solid #2a3038; background: transparent;
+  color: #8b949e; cursor: pointer; margin-bottom: 6px;
+}
+.mitem:last-child { margin-bottom: 0; }
+.mitem:hover { border-color: #3fb950; color: #3fb950; background: #0e1a12; }
+
+/* ---------- analyze popup (terminal) ---------- */
+.tpop {
+  width: 420px; max-width: 100%; max-height: 88vh; display: flex; flex-direction: column;
+  background: #0b0e13; border: 1px solid #2f3945; border-radius: 10px; overflow: hidden;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12.5px; line-height: 1.55;
+}
+.tp-scroll { padding: 13px 15px; overflow-y: auto; }
+.tp-echo { margin-bottom: 13px; word-break: break-all; }
+.tp-sec { color: #6e7681; font-size: 10.5px; letter-spacing: .05em; margin: 0 0 7px; }
+.tp-score { font-size: 29px; font-weight: 500; margin: 2px 0 10px; }
+.tp-score small { color: #6e7681; font-size: 14px; }
+.tp-track { height: 9px; background: #161b22; border-radius: 5px; overflow: hidden; margin-bottom: 13px; }
+.tp-fill { height: 100%; }
+.tp-row { display: flex; justify-content: space-between; gap: 12px; padding: 2px 0; }
+.tp-row .lbl { color: #8b949e; }
+.tp-row .br { color: var(--text); }
+.tp-grade { display: inline-block; min-width: 26px; text-align: left; }
+.tp-subrow { color: #6e7681; font-size: 11px; display: flex; justify-content: space-between; padding-bottom: 6px; margin-bottom: 6px; border-bottom: 1px solid #1b2128; }
+.tp-chev { color: #3fb950; }
+.tp-div { border-top: 1px dashed #1b2128; margin: 11px 0; }
+.tp-ins { color: #8b949e; padding: 1px 0; }
+.tp-narr { line-height: 1.7; }
+.tp-sugg { background: #141821; border: 1px solid #1b2128; border-radius: 6px; padding: 9px 11px; color: #d29922; }
+.tp-badge { font-size: 10.5px; padding: 2px 9px; border-radius: 20px; margin-left: 8px; vertical-align: 3px; }
+.tp-badge.gr { background: #10241a; border: 1px solid #245d33; color: var(--green); }
+.tp-badge.am { background: #2a2410; border: 1px solid #4a3d12; color: var(--amber); }
+.tp-badge.rd { background: #3a1718; border: 1px solid #7a2e34; color: var(--red); }
+.pair-row { cursor: pointer; border-radius: 5px; padding: 2px 4px; margin: 0 -4px; }
+.pair-row:hover { background: #12171e; }
+.tp-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 9px; font-size: 11px; color: #8b949e; }
+.tp-leg { display: inline-flex; align-items: center; gap: 5px; }
+.tp-dot { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+.tp-cursorline { color: #6e7681; margin-top: 12px; }
+.tp-cursor { display: inline-block; width: 8px; height: 14px; background: var(--green); vertical-align: -2px; animation: blink 1.1s steps(1) infinite; }
+.tp-foot { display: flex; gap: 8px; padding: 8px 12px; border-top: 1px solid #2f3945; background: #0e131a; }
+.fbtn {
+  font-family: inherit; font-size: 11.5px; padding: 4px 11px; border-radius: 5px;
+  border: 1px solid #2a3038; background: transparent; color: #8b949e; cursor: pointer;
+}
+.fbtn:hover:not(:disabled) { border-color: #3fb950; color: #3fb950; background: #0e1a12; }
+.fbtn:disabled { opacity: .6; cursor: default; }
+.fbtn .fk { color: #3fb950; }
+
 /* ---------- responsive ---------- */
 @media (max-width: 720px) {
   .wrap { padding: 16px 12px 44px; }
