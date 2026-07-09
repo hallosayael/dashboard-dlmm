@@ -19,9 +19,10 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
       const { y, m, d } = tzYMD(p.closedAt, TZ);
       const key = y + '-' + String(m).padStart(2, '0');
       if (!map[key]) map[key] = { y, m, days: {} };
-      const cell = map[key].days[d] || (map[key].days[d] = { v: 0, c: 0, w: 0 });
+      const cell = map[key].days[d] || (map[key].days[d] = { v: 0, c: 0, w: 0, f: 0 });
       cell.v += p.pnlSol;
       cell.c += 1;
+      cell.f += p.feesSol;
       if (p.pnlSol > 0) cell.w += 1;
     }
     const months = Object.keys(map).sort();
@@ -67,7 +68,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
 
   const showTip = (day, cell, el, pin) => {
     const r = el.getBoundingClientRect();
-    setTip({ day, v: cell.v, c: cell.c, w: cell.w, top: r.top, left: r.left + r.width / 2, pinned: pin });
+    setTip({ day, v: cell.v, c: cell.c, w: cell.w, f: cell.f, top: r.top, left: r.left + r.width / 2, pinned: pin });
   };
 
   const numWeeks = Math.ceil((firstWeekday + daysInMonth) / 7);
@@ -161,6 +162,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
         <div className="cal-tip" style={{ top: tip.top, left: clampedLeft }}>
           <div className="cal-tip-date">{tip.day} {MONTH_NAMES[M.m]} {M.y}</div>
           <div className="cal-tip-row"><span className="dim">daily pnl</span><span className={tip.v >= 0 ? 'gr' : 'rd'}>{cval(tip.v, {})}</span></div>
+          <div className="cal-tip-row"><span className="dim">fees</span><span className="gr">{cval(tip.f, {})}</span></div>
           <div className="cal-tip-row"><span className="dim">positions</span><span>{tip.c} <span className="dim">({tip.w}W / {tip.c - tip.w}L)</span></span></div>
           <div className="cal-tip-row"><span className="dim">win rate</span><span className="br">{tip.c ? Math.round((tip.w / tip.c) * 100) : 0}%</span></div>
         </div>
