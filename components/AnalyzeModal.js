@@ -266,7 +266,11 @@ export default function AnalyzeModal({
 
           <div className="tp-div" />
           <div className="tp-sec">suggestion</div>
-          <div className="tp-sugg">→ {(!ai.loading && ai.saran) ? ai.saran : s.suggestion}</div>
+          {ai.loading ? (
+            <div className="tp-sugg dim">menganalisa…</div>
+          ) : (
+            <div className="tp-sugg">→ {ai.saran || s.suggestion}</div>
+          )}
 
           {!ai.loading && ai.off && (
             <div className="tp-ins" style={{ marginTop: 8 }}>! rule-based — LLM tidak aktif</div>
