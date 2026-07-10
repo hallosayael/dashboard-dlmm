@@ -114,6 +114,17 @@ export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }
     const y = (v) => pt + ((pMax - v) / (pMax - pMin)) * iH;
     const yEntry = entryP ? y(entryP) : null;
     const yExit = exitP ? y(exitP) : null;
+
+    // titik entry/exit duduk di candle tempat peristiwanya terjadi (sumbu waktu),
+    // bukan di satu garis vertikal. candle terakhir yang t <= ts.
+    const idxAt = (ts) => {
+      let k = 0;
+      for (let i = 0; i < n; i++) if (cs[i].t <= ts) k = i;
+      return k;
+    };
+    const xEntry = entryP ? cx(idxAt(p.createdAt)) : null;
+    const xExit = exitP ? cx(idxAt(p.closedAt)) : null;
+
     let peY = yEntry != null ? clamp(yEntry, pt + 2, H - 11) : null;
     let pxY = yExit != null ? clamp(yExit, pt + 2, H - 11) : null;
     if (peY != null && pxY != null && Math.abs(peY - pxY) < 19) {
@@ -121,10 +132,23 @@ export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }
       if (peY <= pxY) { peY = mid - 10; pxY = mid + 10; } else { peY = mid + 10; pxY = mid - 10; }
       peY = clamp(peY, pt + 2, H - 11); pxY = clamp(pxY, pt + 2, H - 11);
     }
+
+    // garis pemandu dari titik ke pill, berhenti di tepi pill supaya tak menembusnya.
+    const pillW = (t) => t.length * 6.6 + 16;
+    const lead = (xDot, text) => {
+      const right = VX - 8;
+      const left = right - pillW(text);
+      if (xDot > right) return { x1: right, x2: xDot, px: right };   // titik di kanan pill
+      if (xDot >= left) return { x1: xDot, x2: xDot, px: xDot };     // titik tertutup pill
+      return { x1: xDot, x2: left, px: left };                       // titik di kiri pill
+    };
+
     chart = {
       W, H, pt, pb, RX, VX, cx, y, bw: Math.max(3, Math.min(14, step * 0.6)),
       yHigh: hasRange ? y(p.maxPrice) : null, yLow: hasRange ? y(p.minPrice) : null,
-      yEntry, yExit, peY, pxY,
+      yEntry, yExit, peY, pxY, xEntry, xExit,
+      leadE: xEntry != null ? lead(xEntry, 'ENTRY') : null,
+      leadX: xExit != null ? lead(xExit, 'EXIT') : null,
     };
   }
 
@@ -191,12 +215,21 @@ export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }
                   );
                 })}
 
-                {/* garis vertikal kanan + titik entry/exit */}
-                <line x1={chart.VX} y1={chart.pt - 6} x2={chart.VX} y2={chart.H - 8} stroke="#c9d1d9" strokeWidth="1" strokeDasharray="4 4" opacity="0.45" />
-                {chart.yExit != null && Math.abs(chart.pxY - chart.yExit) > 2 && <line x1={chart.VX} y1={chart.yExit} x2={chart.VX - 6} y2={chart.pxY} stroke="#8b949e" strokeWidth="1" opacity="0.5" />}
-                {chart.yEntry != null && Math.abs(chart.peY - chart.yEntry) > 2 && <line x1={chart.VX} y1={chart.yEntry} x2={chart.VX - 6} y2={chart.peY} stroke="#8b949e" strokeWidth="1" opacity="0.5" />}
-                {chart.yExit != null && <circle cx={chart.VX} cy={chart.yExit} r="5" fill="#0b0e13" stroke="#e6edf3" strokeWidth="2" />}
-                {chart.yEntry != null && <circle cx={chart.VX} cy={chart.yEntry} r="5" fill="#0b0e13" stroke="#e6edf3" strokeWidth="2" />}
+                {/* titik entry/exit di candle-nya masing-masing + pemandu ke pill */}
+                {chart.yExit != null && (
+                  <>
+                    <line x1={chart.leadX.x1} y1={chart.yExit} x2={chart.leadX.x2} y2={chart.yExit} stroke="#8b949e" strokeWidth="1" strokeDasharray="3 4" opacity="0.4" />
+                    {Math.abs(chart.pxY - chart.yExit) > 2 && <line x1={chart.leadX.px} y1={chart.yExit} x2={chart.leadX.px} y2={chart.pxY} stroke="#8b949e" strokeWidth="1" opacity="0.5" />}
+                    <circle cx={chart.xExit} cy={chart.yExit} r="5" fill="#0b0e13" stroke="#e6edf3" strokeWidth="2" />
+                  </>
+                )}
+                {chart.yEntry != null && (
+                  <>
+                    <line x1={chart.leadE.x1} y1={chart.yEntry} x2={chart.leadE.x2} y2={chart.yEntry} stroke="#8b949e" strokeWidth="1" strokeDasharray="3 4" opacity="0.4" />
+                    {Math.abs(chart.peY - chart.yEntry) > 2 && <line x1={chart.leadE.px} y1={chart.yEntry} x2={chart.leadE.px} y2={chart.peY} stroke="#8b949e" strokeWidth="1" opacity="0.5" />}
+                    <circle cx={chart.xEntry} cy={chart.yEntry} r="5" fill="#0b0e13" stroke="#e6edf3" strokeWidth="2" />
+                  </>
+                )}
 
                 {/* pills */}
                 {hasRange && <PillTwo x={4} y={clamp(chart.yHigh, chart.pt, chart.H - 11)} tag="HIGH" value={fmtPriceShort(p.maxPrice)} />}
@@ -206,7 +239,7 @@ export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }
               </svg>
             )}
             <div className="md-chart-note">
-              {cs.length > 0 && <>candle {oh.timeframe} · </>}<span style={{ color: '#a99cf5' }}>kotak</span> = range bin · badge = status harga vs range
+              {cs.length > 0 && <>candle {oh.timeframe} · </>}<span style={{ color: '#a99cf5' }}>kotak</span> = range bin · titik = candle saat entry/exit · badge = status harga vs range
             </div>
           </div>
 
