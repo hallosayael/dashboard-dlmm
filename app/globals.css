@@ -397,10 +397,16 @@ html, body {
 .tp-note { margin-top: 11px; font-size: 10px; line-height: 1.6; color: #4d5560; }
 
 /* ── kartu share (export PNG) ─────────────────────────────────────────────
-   Lebar tetap + di luar layar. JANGAN pakai display:none — html-to-image
-   butuh elemen yang benar-benar ter-layout. */
-.hc {
+   JANGAN pakai display:none — html-to-image butuh elemen yang ter-layout.
+   Offset ada di .hc-wrap, BUKAN di .hc: html-to-image mengkloning style node
+   yang ditangkap, jadi left:-10000px di .hc akan menggeser isinya keluar
+   kanvas dan menghasilkan PNG kosong. */
+.hc-wrap {
   position: absolute; left: -10000px; top: 0;
+  width: 1100px; pointer-events: none;
+}
+.hc {
+  position: static;
   width: 1100px; box-sizing: border-box;
   background: #0b0e13; border: 1px solid #1b2128; border-radius: 14px;
   padding: 34px 38px;
