@@ -98,7 +98,6 @@ export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }
   if (cs.length) {
     const W = 440, H = 214, pl = 6, pr = 6, pt = 52, pb = 22; // pt besar = ruang badge
     const RX = Math.round(W * 0.56);
-    const VX = Math.round(W * 0.9);
     const prices = [];
     for (const c of cs) prices.push(c.h, c.l);
     if (hasRange) prices.push(p.minPrice, p.maxPrice);
@@ -125,30 +124,38 @@ export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }
     const xEntry = entryP ? cx(idxAt(p.createdAt)) : null;
     const xExit = exitP ? cx(idxAt(p.closedAt)) : null;
 
-    let peY = yEntry != null ? clamp(yEntry, pt + 2, H - 11) : null;
-    let pxY = yExit != null ? clamp(yExit, pt + 2, H - 11) : null;
-    if (peY != null && pxY != null && Math.abs(peY - pxY) < 19) {
-      const mid = (peY + pxY) / 2;
-      if (peY <= pxY) { peY = mid - 10; pxY = mid + 10; } else { peY = mid + 10; pxY = mid - 10; }
-      peY = clamp(peY, pt + 2, H - 11); pxY = clamp(pxY, pt + 2, H - 11);
-    }
-
-    // garis pemandu dari titik ke pill, berhenti di tepi pill supaya tak menembusnya.
+    // pill menempel pada bulatannya sendiri: di kanan titik kalau muat,
+    // kalau tidak muat pindah ke kiri titik.
     const pillW = (t) => t.length * 6.6 + 16;
-    const lead = (xDot, text) => {
-      const right = VX - 8;
-      const left = right - pillW(text);
-      if (xDot > right) return { x1: right, x2: xDot, px: right };   // titik di kanan pill
-      if (xDot >= left) return { x1: xDot, x2: xDot, px: xDot };     // titik tertutup pill
-      return { x1: xDot, x2: left, px: left };                       // titik di kiri pill
+    const GAP = 10;
+    const pillFor = (xDot, yDot, text) => {
+      const w = pillW(text);
+      let rightX = xDot + GAP + w;                 // pill di kanan titik
+      if (rightX > W - 4) rightX = xDot - GAP;     // tak muat -> pindah ke kiri
+      if (rightX - w < 4) rightX = xDot + GAP + w; // kiri juga tak muat -> paksa kanan
+      const onRight = rightX > xDot;
+      return { rightX, w, y: clamp(yDot, pt + 2, H - 11), near: onRight ? rightX - w : rightX };
     };
 
+    const pillE = yEntry != null ? pillFor(xEntry, yEntry, 'ENTRY') : null;
+    const pillX = yExit != null ? pillFor(xExit, yExit, 'EXIT') : null;
+
+    // hanya geser vertikal kalau kedua pill benar-benar bertindih (x DAN y).
+    if (pillE && pillX) {
+      const overlapX = pillE.rightX - pillE.w < pillX.rightX && pillX.rightX - pillX.w < pillE.rightX;
+      if (overlapX && Math.abs(pillE.y - pillX.y) < 17) {
+        const mid = (pillE.y + pillX.y) / 2;
+        if (pillE.y <= pillX.y) { pillE.y = mid - 9; pillX.y = mid + 9; }
+        else { pillE.y = mid + 9; pillX.y = mid - 9; }
+        pillE.y = clamp(pillE.y, pt + 2, H - 11);
+        pillX.y = clamp(pillX.y, pt + 2, H - 11);
+      }
+    }
+
     chart = {
-      W, H, pt, pb, RX, VX, cx, y, bw: Math.max(3, Math.min(14, step * 0.6)),
+      W, H, pt, pb, RX, cx, y, bw: Math.max(3, Math.min(14, step * 0.6)),
       yHigh: hasRange ? y(p.maxPrice) : null, yLow: hasRange ? y(p.minPrice) : null,
-      yEntry, yExit, peY, pxY, xEntry, xExit,
-      leadE: xEntry != null ? lead(xEntry, 'ENTRY') : null,
-      leadX: xExit != null ? lead(xExit, 'EXIT') : null,
+      yEntry, yExit, xEntry, xExit, pillE, pillX,
     };
   }
 
@@ -215,18 +222,18 @@ export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }
                   );
                 })}
 
-                {/* titik entry/exit di candle-nya masing-masing + pemandu ke pill */}
+                {/* titik entry/exit di candle-nya masing-masing, pill menempel di sebelahnya */}
                 {chart.yExit != null && (
                   <>
-                    <line x1={chart.leadX.x1} y1={chart.yExit} x2={chart.leadX.x2} y2={chart.yExit} stroke="#8b949e" strokeWidth="1" strokeDasharray="3 4" opacity="0.4" />
-                    {Math.abs(chart.pxY - chart.yExit) > 2 && <line x1={chart.leadX.px} y1={chart.yExit} x2={chart.leadX.px} y2={chart.pxY} stroke="#8b949e" strokeWidth="1" opacity="0.5" />}
+                    <line x1={chart.xExit} y1={chart.yExit} x2={chart.pillX.near} y2={chart.yExit} stroke="#8b949e" strokeWidth="1" opacity="0.4" />
+                    {Math.abs(chart.pillX.y - chart.yExit) > 2 && <line x1={chart.pillX.near} y1={chart.yExit} x2={chart.pillX.near} y2={chart.pillX.y} stroke="#8b949e" strokeWidth="1" opacity="0.4" />}
                     <circle cx={chart.xExit} cy={chart.yExit} r="5" fill="#0b0e13" stroke="#e6edf3" strokeWidth="2" />
                   </>
                 )}
                 {chart.yEntry != null && (
                   <>
-                    <line x1={chart.leadE.x1} y1={chart.yEntry} x2={chart.leadE.x2} y2={chart.yEntry} stroke="#8b949e" strokeWidth="1" strokeDasharray="3 4" opacity="0.4" />
-                    {Math.abs(chart.peY - chart.yEntry) > 2 && <line x1={chart.leadE.px} y1={chart.yEntry} x2={chart.leadE.px} y2={chart.peY} stroke="#8b949e" strokeWidth="1" opacity="0.5" />}
+                    <line x1={chart.xEntry} y1={chart.yEntry} x2={chart.pillE.near} y2={chart.yEntry} stroke="#8b949e" strokeWidth="1" opacity="0.4" />
+                    {Math.abs(chart.pillE.y - chart.yEntry) > 2 && <line x1={chart.pillE.near} y1={chart.yEntry} x2={chart.pillE.near} y2={chart.pillE.y} stroke="#8b949e" strokeWidth="1" opacity="0.4" />}
                     <circle cx={chart.xEntry} cy={chart.yEntry} r="5" fill="#0b0e13" stroke="#e6edf3" strokeWidth="2" />
                   </>
                 )}
@@ -234,8 +241,8 @@ export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }
                 {/* pills */}
                 {hasRange && <PillTwo x={4} y={clamp(chart.yHigh, chart.pt, chart.H - 11)} tag="HIGH" value={fmtPriceShort(p.maxPrice)} />}
                 {hasRange && <PillTwo x={4} y={clamp(chart.yLow, chart.pt, chart.H - 11)} tag="LOW" value={fmtPriceShort(p.minPrice)} />}
-                {chart.yExit != null && <PillLabel rightX={chart.VX - 8} y={chart.pxY} text="EXIT" />}
-                {chart.yEntry != null && <PillLabel rightX={chart.VX - 8} y={chart.peY} text="ENTRY" />}
+                {chart.yExit != null && <PillLabel rightX={chart.pillX.rightX} y={chart.pillX.y} text="EXIT" />}
+                {chart.yEntry != null && <PillLabel rightX={chart.pillE.rightX} y={chart.pillE.y} text="ENTRY" />}
               </svg>
             )}
             <div className="md-chart-note">
