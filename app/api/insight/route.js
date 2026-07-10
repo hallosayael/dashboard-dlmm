@@ -5,9 +5,20 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 export const maxDuration = 30;
 
-// Model bisa diganti lewat env. Default = paling hemat/cepat.
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
 const BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+
+// Google kadang mem-pensiunkan model untuk akun baru. Daripada menebak,
+// kita coba beberapa kandidat berurutan sampai ada yang berhasil.
+const FALLBACK_MODELS = [
+  'gemini-3.1-flash-lite',
+  'gemini-3.5-flash',
+  'gemini-2.5-flash',
+];
+
+function modelCandidates() {
+  const envM = (process.env.GEMINI_MODEL || '').trim();
+  return [...new Set(envM ? [envM, ...FALLBACK_MODELS] : FALLBACK_MODELS)];
+}
 
 const r2 = (v) => (Number.isFinite(Number(v)) ? Math.round(Number(v) * 10000) / 10000 : 0);
 const pct = (v) => (Number.isFinite(Number(v)) ? Math.round(Number(v) * 100) : 0);
@@ -60,9 +71,24 @@ function buildPrompt(m) {
   ].join('\n');
 }
 
+async function callModel(model, key, prompt) {
+  return fetchWithTimeout(
+    `${BASE}/${model}:generateContent`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.4, maxOutputTokens: 400, responseMimeType: 'application/json' },
+      }),
+    },
+    20000
+  );
+}
+
 export async function POST(request) {
   const key = process.env.GEMINI_API_KEY;
-  // Tanpa key -> beri tahu client supaya fallback ke teks rule-based (bukan error keras).
+  // Tanpa key -> client fallback ke teks rule-based (bukan error keras).
   if (!key) return NextResponse.json({ error: 'LLM_OFF' });
 
   let m;
@@ -73,41 +99,39 @@ export async function POST(request) {
   }
   if (!m || !m.n) return NextResponse.json({ error: 'metrik kosong' });
 
-  try {
-    const r = await fetchWithTimeout(
-      `${BASE}/${MODEL}:generateContent`,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-goog-api-key': key },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: buildPrompt(m) }] }],
-          generationConfig: {
-            temperature: 0.4,
-            maxOutputTokens: 400,
-            responseMimeType: 'application/json',
-          },
-        }),
-      },
-      20000
-    );
+  const prompt = buildPrompt(m);
+  let lastError = '';
+  let lastDetail = '';
 
-    if (!r.ok) {
-      const t = await r.text().catch(() => '');
-      return NextResponse.json({ error: `gemini ${r.status}`, detail: t.slice(0, 180) });
+  for (const model of modelCandidates()) {
+    let r;
+    try {
+      r = await callModel(model, key, prompt);
+    } catch (e) {
+      lastError = `network (${model})`;
+      lastDetail = e?.message || '';
+      continue; // timeout/jaringan -> coba model berikutnya
     }
 
-    const j = await r.json();
-    const text = j?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    let out;
-    try { out = JSON.parse(text); } catch { out = { analisa: String(text).trim(), saran: '' }; }
-    if (!out?.analisa) return NextResponse.json({ error: 'balasan kosong' });
+    if (r.ok) {
+      const j = await r.json();
+      const text = j?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      let out;
+      try { out = JSON.parse(text); } catch { out = { analisa: String(text).trim(), saran: '' }; }
+      if (!out?.analisa) { lastError = `balasan kosong (${model})`; continue; }
+      return NextResponse.json({ analisa: String(out.analisa), saran: String(out.saran || ''), model });
+    }
 
-    return NextResponse.json({
-      analisa: String(out.analisa),
-      saran: String(out.saran || ''),
-      model: MODEL,
-    });
-  } catch (e) {
-    return NextResponse.json({ error: e?.message || 'gagal memanggil LLM' });
+    const t = await r.text().catch(() => '');
+    lastError = `gemini ${r.status} (${model})`;
+    lastDetail = t.slice(0, 180);
+
+    // 404/400 = model tidak tersedia untuk akun ini -> coba kandidat berikutnya.
+    if (r.status === 404 || r.status === 400) continue;
+
+    // 401/403 (key salah) atau 429 (kuota habis) -> ganti model tidak menolong.
+    return NextResponse.json({ error: lastError, detail: lastDetail });
   }
+
+  return NextResponse.json({ error: lastError || 'semua model gagal', detail: lastDetail });
 }
