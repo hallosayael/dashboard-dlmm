@@ -5,6 +5,22 @@ import { fmtMoney, fmtPct, shortAddr, sinceStr } from '../lib/format';
 import { computeHealth, computePools, computeAudit, computeCompare, computeInsight } from '../lib/analytics';
 
 const OVERLAY_COLORS = ['#3fb950', '#39c5cf', '#d29922', '#a99cf5', '#f85149'];
+
+// Versi prompt — naikkan kalau prompt di /api/insight diubah, biar cache lama batal.
+const AI_PROMPT_V = 'v1';
+
+// Kunci cache = sidik jari METRIK (bukan alamat wallet). Kalau ada posisi baru
+// closed / range diganti, metrik berubah -> kunci berubah -> LLM dipanggil ulang.
+// Jadi cache tidak mungkin basi.
+function aiCacheKey(s, range) {
+  const r = (x, d = 4) => Math.round((Number(x) || 0) * 10 ** d) / 10 ** d;
+  return [
+    'insight', AI_PROMPT_V, range, s.n,
+    r(s.totalPnl), r(s.totalFees), r(s.ilRatio, 3),
+    s.avgHoldMin, s.overall,
+    s.bestPool?.pair || '-', s.worstPool?.pair || '-',
+  ].join('|');
+}
 const CMD_LABEL = {
   'wallet-health': 'wallet-health',
   'pool-analysis': 'pool-analysis',
@@ -19,6 +35,7 @@ export default function AnalyzeModal({
   const [detailPair, setDetailPair] = useState(null);
   const [overlay, setOverlay] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [ai, setAi] = useState({ loading: false, analisa: '', saran: '', off: false });
   const cardRef = useRef(null);
 
   const m = (sol, o) => fmtMoney(sol, cur, solUsd, usdIdr, o);
@@ -33,6 +50,45 @@ export default function AnalyzeModal({
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, [detailPair, onClose]);
+
+  // Tab "insight": minta narasi ke LLM. Angka tetap dihitung lokal (deterministik);
+  // LLM hanya menarasikan. Kalau gagal / key tak ada -> fallback teks rule-based.
+  useEffect(() => {
+    if (command !== 'insight') return;
+    const s = computeInsight(positions);
+    if (!s) return;
+
+    // cache berbasis sidik jari metrik -> tak mungkin menyajikan data basi
+    const key = aiCacheKey(s, range);
+    try {
+      const hit = sessionStorage.getItem(key);
+      if (hit) {
+        const j = JSON.parse(hit);
+        setAi({ loading: false, analisa: j.analisa, saran: j.saran || '', off: false });
+        return;
+      }
+    } catch (_) { /* sessionStorage tak tersedia — lanjut fetch */ }
+
+    let alive = true;
+    setAi({ loading: true, analisa: '', saran: '', off: false });
+    fetch('/api/insight', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ ...s, range }),
+    })
+      .then((r) => r.json())
+      .then((j) => {
+        if (!alive) return;
+        if (j?.analisa) {
+          setAi({ loading: false, analisa: j.analisa, saran: j.saran || '', off: false });
+          try { sessionStorage.setItem(key, JSON.stringify({ analisa: j.analisa, saran: j.saran || '' })); } catch (_) {}
+        } else {
+          setAi({ loading: false, analisa: '', saran: '', off: true });
+        }
+      })
+      .catch(() => { if (alive) setAi({ loading: false, analisa: '', saran: '', off: true }); });
+    return () => { alive = false; };
+  }, [command, positions, range]);
 
   async function exportPng() {
     if (!cardRef.current) return;
@@ -192,17 +248,29 @@ export default function AnalyzeModal({
     else {
       body = (
         <>
-          <div className="tp-sec">analysis</div>
-          <div className="tp-narr">
-            Wallet menghasilkan <span className="gr">{m(s.totalFees, { compact: true })}</span> fee.{' '}
-            <span className={s.ilRatio >= 0.5 ? 'rd' : 'br'}>{Math.round(s.ilRatio * 100)}%</span> tergerus IL.{' '}
-            {s.bestPool && <>Pool terbaik <span className="cy">{s.bestPool.pair}</span>.{' '}</>}
-            Rata-rata posisi <span className="br">{s.avgHoldMin} menit</span>.{' '}
-            {s.longWorse ? 'Hold >2 jam performa lebih rendah.' : 'Durasi hold relatif konsisten.'}
-          </div>
+          <div className="tp-sec">analysis {ai.analisa && <span className="tp-ai">ai</span>}</div>
+
+          {ai.loading ? (
+            <div className="tp-narr dim">menganalisa…</div>
+          ) : ai.analisa ? (
+            <div className="tp-narr">{ai.analisa}</div>
+          ) : (
+            <div className="tp-narr">
+              Wallet menghasilkan <span className="gr">{m(s.totalFees, { compact: true })}</span> fee.{' '}
+              <span className={s.ilRatio >= 0.5 ? 'rd' : 'br'}>{Math.round(s.ilRatio * 100)}%</span> tergerus IL.{' '}
+              {s.bestPool && <>Pool terbaik <span className="cy">{s.bestPool.pair}</span>.{' '}</>}
+              Rata-rata posisi <span className="br">{s.avgHoldMin} menit</span>.{' '}
+              {s.longWorse ? 'Hold >2 jam performa lebih rendah.' : 'Durasi hold relatif konsisten.'}
+            </div>
+          )}
+
           <div className="tp-div" />
           <div className="tp-sec">suggestion</div>
-          <div className="tp-sugg">→ {s.suggestion}</div>
+          <div className="tp-sugg">→ {(!ai.loading && ai.saran) ? ai.saran : s.suggestion}</div>
+
+          {!ai.loading && ai.off && (
+            <div className="tp-ins" style={{ marginTop: 8 }}>! rule-based — LLM tidak aktif</div>
+          )}
         </>
       );
     }
