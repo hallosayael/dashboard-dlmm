@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { fmtMoney, fmtPct, shortAddr, sinceStr } from '../lib/format';
 import { computeHealth, computePools, computeAudit, computeCompare, computeInsight } from '../lib/analytics';
+import HealthCard from './HealthCard';
 
 const OVERLAY_COLORS = ['#3fb950', '#39c5cf', '#d29922', '#a99cf5', '#f85149'];
 
@@ -37,6 +38,8 @@ export default function AnalyzeModal({
   const [busy, setBusy] = useState(false);
   const [ai, setAi] = useState({ loading: false, analisa: '', saran: '', off: false });
   const cardRef = useRef(null);
+  // kartu share khusus PNG (wallet-health) — bukan popup di layar
+  const healthRef = useRef(null);
 
   const m = (sol, o) => fmtMoney(sol, cur, solUsd, usdIdr, o);
 
@@ -91,11 +94,13 @@ export default function AnalyzeModal({
   }, [command, positions, range]);
 
   async function exportPng() {
-    if (!cardRef.current) return;
+    // wallet-health punya kartu share sendiri; perintah lain jatuh ke popup.
+    const node = healthRef.current || cardRef.current;
+    if (!node) return;
     setBusy(true);
     try {
       const { toPng } = await import('html-to-image');
-      const url = await toPng(cardRef.current, {
+      const url = await toPng(node, {
         pixelRatio: 2, backgroundColor: '#0b0e13', skipFonts: true,
       });
       const a = document.createElement('a');
@@ -132,6 +137,17 @@ export default function AnalyzeModal({
           <div className="tp-div" />
           <div className="tp-sec">insight</div>
           {h.insights.map((t, i) => <div className="tp-ins" key={i}>! {t}</div>)}
+          <div className="tp-note">
+            # skor heuristik internal, bukan standar industri.
+            <br /># tidak dibandingkan dengan wallet LP lain.
+          </div>
+          <HealthCard
+            innerRef={healthRef}
+            health={h}
+            positions={positions}
+            range={range}
+            walletLabel={walletLabel}
+          />
         </>
       );
     }
