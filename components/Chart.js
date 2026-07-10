@@ -55,6 +55,13 @@ export default function Chart({ positions, cur, solUsd, usdIdr }) {
   const last = pts[pts.length - 1].v;
   const fmt = (v, o) => fmtMoney(v, cur, solUsd, usdIdr, o);
 
+  // Saat equity mayoritas minus, garis nol merapat ke puncak sehingga label "0"
+  // menabrak label vmax. Turunkan label nol ke bawah garis kalau terlalu rapat,
+  // dan sembunyikan label puncak kalau equity memang tak pernah di atas nol.
+  const topY = 11;
+  const showMax = vmax > 0;
+  const zeroY = y0 - topY < 13 ? Math.min(H - 3, y0 + 11) : y0 - 3;
+
   return (
     <>
       <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 'auto' }} role="img" aria-label="equity curve">
@@ -64,8 +71,10 @@ export default function Chart({ positions, cur, solUsd, usdIdr }) {
           <line key={i} x1={sg.x1} y1={sg.y1} x2={sg.x2} y2={sg.y2}
             stroke={sg.neg ? '#f85149' : '#3fb950'} strokeWidth="2" strokeLinejoin="round" />
         ))}
-        <text x="3" y="11" fontSize="9" fill="#6e7681">{fmt(vmax, { compact: true })}</text>
-        <text x="3" y={y0 - 3} fontSize="9" fill="#6e7681">{cur === 'sol' ? '0 SOL' : '0'}</text>
+        {showMax && (
+          <text x="3" y={topY} fontSize="9" fill="#6e7681">{fmt(vmax, { compact: true })}</text>
+        )}
+        <text x="3" y={zeroY} fontSize="9" fill="#6e7681">{cur === 'sol' ? '0 SOL' : '0'}</text>
       </svg>
       <div className="dim" style={{ fontSize: 10, marginTop: 7 }}>
         kumulatif realized pnl · hijau saat profit / merah saat minus · {fmt(last, {})}
