@@ -57,7 +57,11 @@ export default function HealthCard({ innerRef, health, positions, range, walletL
   const now = new Date();
   const tanggal = `${now.getDate()} ${BULAN[now.getMonth()]} ${now.getFullYear()}`;
 
+  // Pembungkus yang menggeser ke luar layar. Node yang ditangkap (.hc) HARUS
+  // position:static — html-to-image mengkloning style node, jadi offset apa pun
+  // pada node itu ikut terbawa dan isinya keluar dari kanvas (hasil: PNG kosong).
   return (
+    <div className="hc-wrap" aria-hidden="true">
     <div className="hc" ref={innerRef}>
       <div className="hc-prompt">
         meridian@dlmm:~$ <span className="hc-cmd">dlmm-fetch --health</span>
@@ -124,6 +128,7 @@ export default function HealthCard({ innerRef, health, positions, range, walletL
         <span className="hc-site">dashboard.dlmm.my.id</span>
         <span className="dimc">{tanggal}</span>
       </div>
+    </div>
     </div>
   );
 }
