@@ -7,7 +7,7 @@ import { computeHealth, computePools, computeAudit, computeCompare, computeInsig
 const OVERLAY_COLORS = ['#3fb950', '#39c5cf', '#d29922', '#a99cf5', '#f85149'];
 
 // Versi prompt — naikkan kalau prompt di /api/insight diubah, biar cache lama batal.
-const AI_PROMPT_V = 'v1';
+const AI_PROMPT_V = 'v2';
 
 // Kunci cache = sidik jari METRIK (bukan alamat wallet). Kalau ada posisi baru
 // closed / range diganti, metrik berubah -> kunci berubah -> LLM dipanggil ulang.
