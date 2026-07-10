@@ -393,6 +393,56 @@ html, body {
 .tp-chev { color: #3fb950; }
 .tp-div { border-top: 1px dashed #1b2128; margin: 11px 0; }
 .tp-ins { color: #8b949e; padding: 1px 0; }
+/* disclaimer kecil — skor wallet-health adalah heuristik, bukan metrik baku */
+.tp-note { margin-top: 11px; font-size: 10px; line-height: 1.6; color: #4d5560; }
+
+/* ── kartu share (export PNG) ─────────────────────────────────────────────
+   Lebar tetap + di luar layar. JANGAN pakai display:none — html-to-image
+   butuh elemen yang benar-benar ter-layout. */
+.hc {
+  position: absolute; left: -10000px; top: 0;
+  width: 1100px; box-sizing: border-box;
+  background: #0b0e13; border: 1px solid #1b2128; border-radius: 14px;
+  padding: 34px 38px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 20px; line-height: 1.75; color: #c9d1d9;
+}
+.hc .gr { color: #3fb950; }
+.hc .am { color: #d29922; }
+.hc .rd { color: #f85149; }
+.hc .dimc { color: #4d5560; }
+.hc-prompt { color: #3fb950; margin-bottom: 24px; }
+.hc-cmd { color: #c9d1d9; }
+.hc-body { display: flex; gap: 52px; align-items: flex-start; }
+.hc-left { flex: 0 0 auto; }
+.hc-right { flex: 1 1 auto; min-width: 0; }
+.hc-ascii { margin: 0; color: #3fb950; font-size: 20px; line-height: 1.25; }
+.hc-bins { margin: 13px 0 0; font-size: 20px; line-height: 1.25; }
+.hc-on { color: #3fb950; }
+.hc-off { color: #2f3742; }
+.hc-rule { color: #1b2128; }
+.hc-score { margin-top: 26px; display: flex; align-items: baseline; gap: 12px; }
+.hc-num { font-size: 62px; line-height: 1; }
+.hc-den { color: #4d5560; }
+.hc-badge { display: inline-block; margin-top: 10px; font-size: 17px; padding: 3px 15px; border-radius: 20px; }
+.hc-badge.gr { background: #10241a; border: 1px solid #245d33; color: #3fb950; }
+.hc-badge.am { background: #2a2410; border: 1px solid #4a3d12; color: #d29922; }
+.hc-badge.rd { background: #3a1718; border: 1px solid #7a2e34; color: #f85149; }
+.hc-addr { color: #3fb950; }
+.hc-hr { border-top: 1px solid #1b2128; margin: 6px 0 8px; }
+.hc-dash { border-top: 1px dashed #1b2128; margin: 15px 0; }
+.hc-kv { white-space: nowrap; }
+.hc-k { color: #6e7681; display: inline-block; width: 190px; }
+.hc-ins { color: #8b949e; }
+.hc-blocks { margin-top: 17px; display: flex; align-items: center; gap: 7px; }
+.hc-blk { width: 32px; height: 16px; }
+.hc-blk.p { background: #3fb950; }
+.hc-blk.l { background: #f85149; }
+.hc-blk.n { background: #1b2128; }
+.hc-blk-lbl { color: #4d5560; font-size: 17px; margin-left: 9px; }
+.hc-note { color: #4d5560; font-size: 17px; margin-top: 26px; }
+.hc-foot { display: flex; justify-content: space-between; font-size: 17px; }
+.hc-site { color: #8b949e; }
 .tp-narr { line-height: 1.7; }
 .tp-sugg { background: #141821; border: 1px solid #1b2128; border-radius: 6px; padding: 9px 11px; color: #d29922; }
 .tp-badge { font-size: 10.5px; padding: 2px 9px; border-radius: 20px; margin-left: 8px; vertical-align: 3px; }
