@@ -102,6 +102,8 @@ export default function AnalyzeModal({
       const { toPng } = await import('html-to-image');
       const url = await toPng(node, {
         pixelRatio: 2, backgroundColor: '#0b0e13', skipFonts: true,
+        // kunci ukuran ke node aslinya — klon kadang salah mengukur
+        width: node.offsetWidth, height: node.offsetHeight,
       });
       const a = document.createElement('a');
       a.download = `dlmm-${command}-${range}.png`;
