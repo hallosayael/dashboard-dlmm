@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useMemo } from 'react';
-import { fmtMoney, shortAddr } from '../lib/format';
+import { fmtMoney, shortAddr, pnlState, pnlCls } from '../lib/format';
 
 const RANGE_LABEL = { '7d': 'LAST 7 DAYS', '30d': 'LAST 30 DAYS', all: 'ALL TIME' };
 const PALETTE = ['#d4a24e', '#52b98a', '#df7a72', '#e0a75e', '#58a6ff', '#b48ead', '#8b7ff0', '#39c5cf'];
@@ -65,7 +65,8 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
     for (const p of sorted) { cum += p.pnlSol; pts.push({ v: cum, pos: p }); }
 
     const n = positions.length;
-    const wins = positions.filter((p) => p.pnlSol > 0).length;
+    const wins = positions.filter((p) => pnlState(p.pnlSol) > 0).length;
+    const losses = positions.filter((p) => pnlState(p.pnlSol) < 0).length;
     const totalPnl = cum;
     const totalFees = positions.reduce((a, p) => a + p.feesSol, 0);
     const volume = positions.reduce((a, p) => a + p.depositSol, 0);
@@ -83,7 +84,7 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
     markerSet.add(pts.length - 1);
     const pillSet = new Set(idxByImpact.slice(0, 5));
 
-    return { pts, n, wins, winRate: n ? (wins / n) * 100 : 0, totalPnl, totalFees, volume, best, avgHold, markerSet, pillSet };
+    return { pts, n, wins, winRate: (wins + losses) ? (wins / (wins + losses)) * 100 : 0, totalPnl, totalFees, volume, best, avgHold, markerSet, pillSet };
   }, [positions]);
 
   const { pts } = data;
@@ -100,7 +101,7 @@ export default function RecapCard({ positions, cur, solUsd, usdIdr, range, walle
 
   const line = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${X(i).toFixed(1)},${Y(p.v).toFixed(1)}`).join(' ');
   const area = line + ` L${X(pts.length - 1).toFixed(1)},${y0.toFixed(1)} L${X(0).toFixed(1)},${y0.toFixed(1)} Z`;
-  const totalCls = data.totalPnl >= 0 ? 'gr' : 'rd';
+  const totalCls = pnlCls(data.totalPnl);
 
   async function download() {
     if (!cardRef.current) return;
