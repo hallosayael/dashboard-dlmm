@@ -6,7 +6,7 @@ import Chart from './Chart';
 import PositionModal from './PositionModal';
 import RecapCard from './RecapCard';
 import AnalyzeModal from './AnalyzeModal';
-import { fmtMoney, fmtPct, shortAddr, sinceStr } from '../lib/format';
+import { fmtMoney, fmtPct, shortAddr, sinceStr, pnlState } from '../lib/format';
 
 const PAGE_SIZE = 15;
 const RANGE_DAYS = { '7d': 7, '30d': 30, all: Infinity };
@@ -52,16 +52,17 @@ export default function Dashboard({ wallet, data, onReset }) {
     const totalPnl = ranged.reduce((a, p) => a + p.pnlSol, 0);
     const totalFees = ranged.reduce((a, p) => a + p.feesSol, 0);
     const priceIl = totalPnl - totalFees;
-    const wins = ranged.filter((p) => p.pnlSol > 0).length;
-    const losses = n - wins;
-    const winRate = n ? (wins / n) * 100 : 0;
+    const wins = ranged.filter((p) => pnlState(p.pnlSol) > 0).length;
+    const losses = ranged.filter((p) => pnlState(p.pnlSol) < 0).length;
+    const evens = n - wins - losses;
+    const winRate = (wins + losses) ? (wins / (wins + losses)) * 100 : 0;
     let best = null, worst = null;
     for (const p of ranged) {
       if (!best || p.pnlSol > best.pnlSol) best = p;
       if (!worst || p.pnlSol < worst.pnlSol) worst = p;
     }
     const bdMax = Math.max(Math.abs(totalFees), Math.abs(priceIl), Math.abs(totalPnl)) || 1;
-    return { n, totalPnl, totalFees, priceIl, wins, losses, winRate, best, worst, bdMax };
+    return { n, totalPnl, totalFees, priceIl, wins, losses, evens, winRate, best, worst, bdMax };
   }, [ranged]);
 
   const perWallet = useMemo(() => {
@@ -139,7 +140,7 @@ export default function Dashboard({ wallet, data, onReset }) {
                   <div className="plabel">─ summary · {range} · {s.n} closed</div>
                   <Row label="net pnl" value={<span className={pnlCls}>{m(s.totalPnl, {})}</span>} />
                   <Row label="fees earned" value={<span className="gr">{m(s.totalFees, {})}</span>} />
-                  <Row label="win rate" value={<span className="br">{Math.round(s.winRate)}% <span className="dim">({s.wins}W / {s.losses}L)</span></span>} />
+                  <Row label="win rate" value={<span className="br">{Math.round(s.winRate)}% <span className="dim">({s.wins}W / {s.losses}L{s.evens ? ` / ${s.evens}E` : ''})</span></span>} />
                   {s.best && <Row label="best" value={<span className="gr">{s.best.pair} {m(s.best.pnlSol, { compact: true })}</span>} />}
                   {s.worst && <Row label="worst" value={<span className="rd">{s.worst.pair} {m(s.worst.pnlSol, { compact: true })}</span>} />}
                 </div>
@@ -191,16 +192,18 @@ export default function Dashboard({ wallet, data, onReset }) {
                     </thead>
                     <tbody>
                       {pageItems.map((p, i) => {
-                        const win = p.pnlSol >= 0;
+                        const st = pnlState(p.pnlSol);
+                        const cls = st > 0 ? 'gr' : st < 0 ? 'rd' : 'ev';
+                        const tag = st > 0 ? ['tag-g', 'profit ✓'] : st < 0 ? ['tag-r', 'loss ✗'] : ['tag-e', 'impas ≈'];
                         return (
                           <tr key={p.positionAddress || i} className="pos-row" onClick={() => setSelected(p)}>
                             <td className="br">{p.pair}{multi && p.owner && <span className="owner-tag">{shortAddr(p.owner)}</span>}</td>
                             <td className="dim">{sinceStr(p.closedAt)}</td>
                             <td>{m(p.depositSol, { compact: true, unit: false, sign: false })}</td>
                             <td className="gr">{m(p.feesSol, { compact: true, unit: false })}</td>
-                            <td className={win ? 'gr' : 'rd'}>{m(p.pnlSol, { compact: true, unit: false })}</td>
-                            <td className={win ? 'gr' : 'rd'}>{fmtPct(p.pnlPct)}</td>
-                            <td><span className={'tag ' + (win ? 'tag-g' : 'tag-r')}>{win ? 'profit ✓' : 'loss ✗'}</span></td>
+                            <td className={cls}>{m(p.pnlSol, { compact: true, unit: false })}</td>
+                            <td className={cls}>{fmtPct(p.pnlPct)}</td>
+                            <td><span className={'tag ' + tag[0]}>{tag[1]}</span></td>
                           </tr>
                         );
                       })}
@@ -210,16 +213,18 @@ export default function Dashboard({ wallet, data, onReset }) {
 
                 <div className="pos-mobile">
                   {pageItems.map((p, i) => {
-                    const win = p.pnlSol >= 0;
+                    const st = pnlState(p.pnlSol);
+                    const cls = st > 0 ? 'gr' : st < 0 ? 'rd' : 'ev';
+                    const pc = st > 0 ? 'pcard-g' : st < 0 ? 'pcard-r' : 'pcard-e';
                     return (
-                      <div key={p.positionAddress || i} className={'pcard ' + (win ? 'pcard-g' : 'pcard-r')} onClick={() => setSelected(p)}>
+                      <div key={p.positionAddress || i} className={'pcard ' + pc} onClick={() => setSelected(p)}>
                         <div className="pcard-top">
                           <span className="br">{p.pair}{multi && p.owner && <span className="owner-tag">{shortAddr(p.owner)}</span>}</span>
-                          <span className={win ? 'gr' : 'rd'}>{m(p.pnlSol, {})}</span>
+                          <span className={cls}>{m(p.pnlSol, {})}</span>
                         </div>
                         <div className="pcard-bot dim">
                           <span>{sinceStr(p.closedAt)} · fee {m(p.feesSol, { compact: true, unit: false })}</span>
-                          <span className={win ? 'gr' : 'rd'}>{fmtPct(p.pnlPct)}</span>
+                          <span className={cls}>{fmtPct(p.pnlPct)}</span>
                         </div>
                       </div>
                     );
