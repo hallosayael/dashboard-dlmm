@@ -177,6 +177,8 @@ html, body {
 .tag { font-size: 10.5px; padding: 1px 7px; border-radius: 4px; white-space: nowrap; }
 .tag-g { background: #13301d; color: var(--green); }
 .tag-r { background: #3a1718; color: var(--red); }
+.tag-e { background: #20262e; color: #9aa4b0; }
+.ev { color: #9aa4b0; }
 
 .hint-foot { font-size: 10.5px; margin-top: 10px; }
 
@@ -194,6 +196,7 @@ html, body {
 .pcard:last-child { margin-bottom: 0; }
 .pcard-g { border-left: 2px solid var(--green); }
 .pcard-r { border-left: 2px solid var(--red); }
+.pcard-e { border-left: 2px solid #6b7480; }
 .pcard-top { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 3px; }
 .pcard-bot { display: flex; justify-content: space-between; font-size: 11px; }
 
@@ -229,6 +232,9 @@ html, body {
 .cr1 { background: #3a1c1e; }
 .cr2 { background: #6e2528; }
 .cr3 { background: #a8332f; }
+.cb1 { background: #23282f; }
+.cb2 { background: #2b313a; }
+.cb3 { background: #333a44; }
 
 /* calendar: 7 hari + kolom WEEK + baris total harian */
 .cal-scroll { overflow-x: auto; }
