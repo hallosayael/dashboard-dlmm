@@ -1,15 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { fmtMoney, tzYMD, MONTH_NAMES } from '../lib/format';
+import { fmtMoney, tzYMD, MONTH_NAMES, pnlState, pnlCls } from '../lib/format';
 
 const TZ = 7; // GMT+7
 const WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 function tierClass(v, maxAbs) {
+  const st = pnlState(v);
+  if (st === 0) return 'cb1'; // impas — netral
   const ratio = maxAbs > 0 ? Math.abs(v) / maxAbs : 0;
   const lvl = ratio > 0.66 ? 3 : ratio > 0.33 ? 2 : 1;
-  return (v >= 0 ? 'cg' : 'cr') + lvl;
+  return (st > 0 ? 'cg' : 'cr') + lvl;
 }
 
 export default function Calendar({ positions, cur, solUsd, usdIdr }) {
@@ -19,11 +21,12 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
       const { y, m, d } = tzYMD(p.closedAt, TZ);
       const key = y + '-' + String(m).padStart(2, '0');
       if (!map[key]) map[key] = { y, m, days: {} };
-      const cell = map[key].days[d] || (map[key].days[d] = { v: 0, c: 0, w: 0, f: 0 });
+      const cell = map[key].days[d] || (map[key].days[d] = { v: 0, c: 0, w: 0, e: 0, f: 0 });
       cell.v += p.pnlSol;
       cell.c += 1;
       cell.f += p.feesSol;
-      if (p.pnlSol > 0) cell.w += 1;
+      const ps = pnlState(p.pnlSol);
+      if (ps > 0) cell.w += 1; else if (ps === 0) cell.e += 1;
     }
     const months = Object.keys(map).sort();
     for (const k of months) {
@@ -32,7 +35,8 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
       for (const d in o.days) {
         const v = o.days[d].v;
         total += v;
-        if (v >= 0) green++; else red++;
+        const st = pnlState(v);
+        if (st > 0) green++; else if (st < 0) red++;
       }
       o.total = total; o.green = green; o.red = red;
     }
@@ -68,7 +72,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
 
   const showTip = (day, cell, el, pin) => {
     const r = el.getBoundingClientRect();
-    setTip({ day, v: cell.v, c: cell.c, w: cell.w, f: cell.f, top: r.top, left: r.left + r.width / 2, pinned: pin });
+    setTip({ day, v: cell.v, c: cell.c, w: cell.w, e: cell.e, f: cell.f, top: r.top, left: r.left + r.width / 2, pinned: pin });
   };
 
   const numWeeks = Math.ceil((firstWeekday + daysInMonth) / 7);
@@ -121,7 +125,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
         {dayCells}
         <div className="wkcell">
           <span className="wkl">W{wi + 1}</span>
-          <span className={'wkv ' + (wt >= 0 ? 'gr' : 'rd')}>{cval(wt, { compact: true, bare: true })}</span>
+          <span className={'wkv ' + pnlCls(wt)}>{cval(wt, { compact: true, bare: true })}</span>
         </div>
       </div>
     );
@@ -134,7 +138,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
       <div className="cal-head">
         <span className="plabel" style={{ marginBottom: 0 }}>{MONTH_NAMES[M.m]} {M.y}</span>
         <span className="cal-meta">
-          <span className={M.total >= 0 ? 'gr' : 'rd'}>{cval(M.total, {})}</span>
+          <span className={pnlCls(M.total)}>{cval(M.total, {})}</span>
           <span className="dim"> · {M.green} green / {M.red} red · {Math.round(winRate)}% win · </span>
           <button className="navbtn" onClick={() => setIdx((i) => Math.max(0, i - 1))} disabled={safeIdx === 0} aria-label="bulan sebelumnya">‹</button>
           <span className="dim"> {MONTH_NAMES[M.m]} </span>
@@ -151,7 +155,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
           {rows}
           <div className="cg8 totrow">
             {weekdayTotals.map((t, ci) => (
-              <div key={ci} className="totcell"><span className={t >= 0 ? 'gr' : 'rd'}>{cval(t, { compact: true, bare: true })}</span></div>
+              <div key={ci} className="totcell"><span className={pnlCls(t)}>{cval(t, { compact: true, bare: true })}</span></div>
             ))}
             <div />
           </div>
@@ -161,10 +165,10 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
       {tip && (
         <div className="cal-tip" style={{ top: tip.top, left: clampedLeft }}>
           <div className="cal-tip-date">{tip.day} {MONTH_NAMES[M.m]} {M.y}</div>
-          <div className="cal-tip-row"><span className="dim">daily pnl</span><span className={tip.v >= 0 ? 'gr' : 'rd'}>{cval(tip.v, {})}</span></div>
+          <div className="cal-tip-row"><span className="dim">daily pnl</span><span className={pnlCls(tip.v)}>{cval(tip.v, {})}</span></div>
           <div className="cal-tip-row"><span className="dim">fees</span><span className="gr">{cval(tip.f, {})}</span></div>
-          <div className="cal-tip-row"><span className="dim">positions</span><span>{tip.c} <span className="dim">({tip.w}W / {tip.c - tip.w}L)</span></span></div>
-          <div className="cal-tip-row"><span className="dim">win rate</span><span className="br">{tip.c ? Math.round((tip.w / tip.c) * 100) : 0}%</span></div>
+          <div className="cal-tip-row"><span className="dim">positions</span><span>{tip.c} <span className="dim">({tip.w}W / {tip.c - tip.w - tip.e}L{tip.e ? ` / ${tip.e}E` : ''})</span></span></div>
+          <div className="cal-tip-row"><span className="dim">win rate</span><span className="br">{tip.c - tip.e > 0 ? Math.round((tip.w / (tip.c - tip.e)) * 100) : 0}%</span></div>
         </div>
       )}
     </div>
