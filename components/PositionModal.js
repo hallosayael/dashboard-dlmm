@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { fmtMoney } from '../lib/format';
+import { fmtMoney, pnlState } from '../lib/format';
 
 function fmtPriceShort(n) {
   n = Number(n);
@@ -79,7 +79,8 @@ export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }
 
   if (!p) return null;
   const m = (sol, o) => fmtMoney(sol, cur, solUsd, usdIdr, o);
-  const win = p.pnlSol >= 0;
+  const st = pnlState(p.pnlSol);
+  const cls = st > 0 ? 'gr' : st < 0 ? 'rd' : 'ev';
   const hold = holdStr(p.closedAt - p.createdAt);
 
   const cs = [...oh.candles].sort((a, b) => a.t - b.t);
@@ -180,8 +181,8 @@ export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }
               <div className="dim md-sub">hold {hold}</div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div className={'md-pnl ' + (win ? 'gr' : 'rd')}>{p.pnlPct >= 0 ? '+' : ''}{Math.round(p.pnlPct)}%</div>
-              <div className={win ? 'gr' : 'rd'} style={{ fontSize: 12, marginTop: 3 }}>{m(p.pnlSol, {})}</div>
+              <div className={'md-pnl ' + cls}>{st === 0 ? '' : p.pnlPct >= 0 ? '+' : ''}{Math.round(p.pnlPct)}%</div>
+              <div className={cls} style={{ fontSize: 12, marginTop: 3 }}>{m(p.pnlSol, {})}</div>
             </div>
           </div>
 
@@ -254,7 +255,7 @@ export default function PositionModal({ position, cur, solUsd, usdIdr, onClose }
             <span>deposit <span className="br">{m(p.depositSol, { bare: true, compact: true, sign: false })}</span></span>
             <span>withdraw <span className="br">{m(p.withdrawSol, { bare: true, compact: true, sign: false })}</span></span>
             <span>fees <span className="gr">{m(p.feesSol, { bare: true, compact: true })}</span></span>
-            <span>net <span className={win ? 'gr' : 'rd'}>{m(p.pnlSol, { bare: true, compact: true })}</span></span>
+            <span>net <span className={cls}>{m(p.pnlSol, { bare: true, compact: true })}</span></span>
           </div>
           <div className="md-inforow bt">
             <span>bin step <span className="br">{p.binStep ?? '—'}</span></span>
