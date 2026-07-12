@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { fmtMoney, fmtPct, shortAddr, sinceStr } from '../lib/format';
+import { fmtMoney, fmtPct, shortAddr, sinceStr, pnlCls } from '../lib/format';
 import { computeHealth, computePools, computeAudit, computeCompare, computeInsight } from '../lib/analytics';
 import HealthCard from './HealthCard';
 
@@ -168,11 +168,11 @@ export default function AnalyzeModal({
         <>
           <div className="tp-sec">{detailPair} · {list.length} closed</div>
           {list.map((p, i) => {
-            const win = p.pnlSol >= 0;
+            const cls = pnlCls(p.pnlSol);
             return (
               <div className="pair-row tp-row" key={p.positionAddress || i} onClick={() => onSelectPosition && onSelectPosition(p)}>
                 <span className="lbl">{sinceStr(p.closedAt)} <span className="dim">· fee {m(p.feesSol, { compact: true, unit: false })}</span></span>
-                <span className={win ? 'gr' : 'rd'}>{m(p.pnlSol, { compact: true, unit: false })} <span className="dim">{fmtPct(p.pnlPct)}</span></span>
+                <span className={cls}>{m(p.pnlSol, { compact: true, unit: false })} <span className="dim">{fmtPct(p.pnlPct)}</span></span>
               </div>
             );
           })}
@@ -185,11 +185,10 @@ export default function AnalyzeModal({
         <>
           <div className="tp-sec">top profit · klik pair untuk detail</div>
           {pools.map((o, i) => {
-            const win = o.pnl >= 0;
             return (
               <div className="pair-row" key={o.pair} onClick={() => setDetailPair(o.pair)}>
                 <div className="tp-row"><span><span className="dim">{i + 1}</span> <span className="cy">{o.pair}</span></span>
-                  <span className={win ? 'gr' : 'rd'}>{m(o.pnl, { compact: true, unit: false })}</span></div>
+                  <span className={pnlCls(o.pnl)}>{m(o.pnl, { compact: true, unit: false })}</span></div>
                 <div className="tp-subrow">{o.trades} trade · {Math.round(o.winRate * 100)}% win<span className="tp-chev">›</span></div>
               </div>
             );
@@ -208,14 +207,14 @@ export default function AnalyzeModal({
         <div className="tp-row"><span className="lbl">deposit</span><span className="br">{m(a.deposit, { compact: true, sign: false })}</span></div>
         <div className="tp-row"><span className="lbl">withdraw</span><span className="br">{m(a.withdraw, { compact: true, sign: false })}</span></div>
         <div className="tp-row"><span className="lbl">fee earned</span><span className="gr">{m(a.fees, { compact: true })}</span></div>
-        <div className="tp-row"><span className="lbl">price impact</span><span className={a.priceImpact >= 0 ? 'gr' : 'rd'}>{m(a.priceImpact, { compact: true })}</span></div>
+        <div className="tp-row"><span className="lbl">price impact</span><span className={pnlCls(a.priceImpact)}>{m(a.priceImpact, { compact: true })}</span></div>
         <div className="tp-div" />
-        <div className="tp-row"><span className="lbl">wallet growth</span><span className={a.growth >= 0 ? 'gr' : 'rd'}>{m(a.growth, { compact: true })}</span></div>
+        <div className="tp-row"><span className="lbl">wallet growth</span><span className={pnlCls(a.growth)}>{m(a.growth, { compact: true })}</span></div>
         <div className="tp-row" style={{ alignItems: 'center', marginTop: 4 }}>
           <span className="lbl">audit</span>
-          <span className={'tp-badge ' + (a.pass ? 'gr' : 'rd')}>{a.pass ? 'pass ✓' : 'review'}</span>
+          <span className={'tp-badge ' + (a.state > 0 ? 'gr' : a.state < 0 ? 'rd' : 'ev')}>{a.state > 0 ? 'pass ✓' : a.state < 0 ? 'review' : 'breakeven'}</span>
         </div>
-        <div className="tp-ins" style={{ marginTop: 6 }}>{a.pass ? '✓' : '!'} {a.note}</div>
+        <div className="tp-ins" style={{ marginTop: 6 }}>{a.state < 0 ? '!' : '✓'} {a.note}</div>
       </>
     );
     footer = <button className="fbtn" onClick={onClose}><span className="fk">[esc]</span> close</button>;
@@ -243,11 +242,11 @@ export default function AnalyzeModal({
           {c.rows.map((r, i) => (
             <div className="tp-row" key={r.wallet}>
               <span className="lbl"><span className="dim">{String.fromCharCode(65 + i)}</span> {shortAddr(r.wallet)} <span className="dim">· {r.n}</span></span>
-              <span className={r.pnl >= 0 ? 'gr' : 'rd'}>{m(r.pnl, { compact: true, unit: false })}</span>
+              <span className={pnlCls(r.pnl)}>{m(r.pnl, { compact: true, unit: false })}</span>
             </div>
           ))}
           <div className="tp-div" />
-          <div className="tp-row"><span className="br">combined</span><span className={c.combined >= 0 ? 'gr' : 'rd'}>{m(c.combined, { compact: true })}</span></div>
+          <div className="tp-row"><span className="br">combined</span><span className={pnlCls(c.combined)}>{m(c.combined, { compact: true })}</span></div>
           <div className="tp-row"><span className="lbl">winrate</span><span className="br">{Math.round(c.winRate * 100)}%</span></div>
         </>
       );
