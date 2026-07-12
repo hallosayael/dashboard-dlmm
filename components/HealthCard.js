@@ -6,6 +6,8 @@
 // Aturan privasi: TIDAK ADA nominal SOL di kartu ini. Hanya skor, huruf, rasio,
 // dan warna. Angka absolut tetap tinggal di dashboard.
 
+import { pnlState } from '../lib/format';
+
 const BULAN = ['jan', 'feb', 'mar', 'apr', 'mei', 'jun', 'jul', 'agu', 'sep', 'okt', 'nov', 'des'];
 
 const ASCII = [
@@ -36,7 +38,8 @@ function last6Days(positions) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
     const v = sum[dayKey(d)];
-    out.push(v === undefined || v === 0 ? 'n' : v > 0 ? 'p' : 'l');
+    const st = v === undefined ? 0 : pnlState(v);
+    out.push(st > 0 ? 'p' : st < 0 ? 'l' : 'n');
   }
   return out;
 }
@@ -45,8 +48,8 @@ export default function HealthCard({ innerRef, health, positions, range, walletL
   if (!health) return null;
 
   const h = health;
-  const wins = positions.filter((p) => p.pnlSol > 0).length;
-  const losses = h.n - wins;
+  const wins = positions.filter((p) => pnlState(p.pnlSol) > 0).length;
+  const losses = positions.filter((p) => pnlState(p.pnlSol) < 0).length;
 
   // fee coverage = fee ÷ kerugian harga. Breakeven di 1.00x.
   // Kalau harga justru menguntungkan, tidak ada yang perlu "ditutup" -> n/a.
