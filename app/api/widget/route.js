@@ -43,6 +43,15 @@ function compute(data, denom, range) {
   const losses = ranged.filter((p) => pnlState(p.pnlSol) < 0).length;
   const winRate = (wins + losses) ? Math.round((wins / (wins + losses)) * 100) : 0;
 
+  // sparkline: net pnl harian 14 hari terakhir (SOL), urut lama -> baru
+  const DAYS = 14;
+  const nowDay = Math.floor((Date.now() / 1000 + TZ * 3600) / 86400);
+  const spark = new Array(DAYS).fill(0);
+  for (const p of positions) {
+    const idx = nowDay - Math.floor((p.closedAt + TZ * 3600) / 86400);
+    if (idx >= 0 && idx < DAYS) spark[DAYS - 1 - idx] += p.pnlSol;
+  }
+
   const walletShort = (data.wallets && data.wallets[0]) || 'wallet';
   const label = data.demo ? 'demo' : (data.wallets && data.wallets.length > 1 ? data.wallets.length + ' wallets' : walletShort.slice(0, 4) + '…' + walletShort.slice(-4));
 
@@ -55,6 +64,7 @@ function compute(data, denom, range) {
     updated: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }),
     label, denom, range,
     line: `net ${m(netSol)} · today ${m(todaySol)} · ${winRate}%`,
+    spark: spark.map((v) => Math.round(v * 1e6) / 1e6),
   };
 }
 
