@@ -1,0 +1,88 @@
+import { NextResponse } from 'next/server';
+import { getWalletData } from '../../../lib/meteora';
+import { fmtMoney, tzYMD, pnlState } from '../../../lib/format';
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
+const TZ = 7; // GMT+7
+const RANGE_DAYS = { '7d': 7, '30d': 30, all: Infinity };
+
+// Cache in-memory per wallet supaya polling widget (KWGT refresh tiap ~30 mnt,
+// tapi bisa beberapa field sekaligus) tidak menghajar API Meteora tiap request.
+const CACHE = new Map(); // key -> { t, data }
+const TTL = 5 * 60 * 1000;
+
+async function getCached(wallet) {
+  const key = wallet.trim().toLowerCase();
+  const hit = CACHE.get(key);
+  if (hit && Date.now() - hit.t < TTL) return hit.data;
+  const data = await getWalletData(wallet);
+  CACHE.set(key, { t: Date.now(), data });
+  return data;
+}
+
+function compute(data, denom, range) {
+  const positions = data.positions || [];
+  const solPrice = data.solPrice;
+  const usdIdr = data.usdIdr;
+  const m = (sol, o) => fmtMoney(sol, denom, solPrice, usdIdr, { compact: true, ...o });
+
+  const cutoff = range === 'all' ? -Infinity : Date.now() / 1000 - RANGE_DAYS[range] * 86400;
+  const ranged = positions.filter((p) => p.closedAt >= cutoff);
+
+  const today = tzYMD(Date.now() / 1000, TZ);
+  const todaySol = positions
+    .filter((p) => { const d = tzYMD(p.closedAt, TZ); return d.y === today.y && d.m === today.m && d.d === today.d; })
+    .reduce((a, p) => a + p.pnlSol, 0);
+
+  const netSol = ranged.reduce((a, p) => a + p.pnlSol, 0);
+  const feesSol = ranged.reduce((a, p) => a + p.feesSol, 0);
+  const wins = ranged.filter((p) => pnlState(p.pnlSol) > 0).length;
+  const losses = ranged.filter((p) => pnlState(p.pnlSol) < 0).length;
+  const winRate = (wins + losses) ? Math.round((wins / (wins + losses)) * 100) : 0;
+
+  const walletShort = (data.wallets && data.wallets[0]) || 'wallet';
+  const label = data.demo ? 'demo' : (data.wallets && data.wallets.length > 1 ? data.wallets.length + ' wallets' : walletShort.slice(0, 4) + '…' + walletShort.slice(-4));
+
+  return {
+    // angka mentah (SOL)
+    netSol, todaySol, feesSol, winRate, wins, losses, closed: ranged.length,
+    // string siap-tampil sesuai denom
+    net: m(netSol), today: m(todaySol), fees: m(feesSol),
+    winrate: winRate + '%', count: String(ranged.length),
+    updated: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }),
+    label, denom, range,
+    line: `net ${m(netSol)} · today ${m(todaySol)} · ${winRate}%`,
+  };
+}
+
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const wallet = searchParams.get('wallet') || '';
+  const denom = (searchParams.get('denom') || 'sol').toLowerCase();
+  const range = RANGE_DAYS[searchParams.get('range')] ? searchParams.get('range') : '30d';
+  const field = searchParams.get('field');
+  const format = searchParams.get('format') || (field ? 'text' : 'json');
+
+  if (!wallet) {
+    return NextResponse.json({ error: 'param wallet wajib' }, { status: 400 });
+  }
+
+  try {
+    const data = await getCached(wallet);
+    const r = compute(data, ['sol', 'usd', 'idr'].includes(denom) ? denom : 'sol', range);
+
+    if (format === 'text') {
+      const val = field && r[field] != null ? String(r[field]) : r.line;
+      return new Response(val, {
+        headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'public, max-age=120' },
+      });
+    }
+    return NextResponse.json(r, { headers: { 'cache-control': 'public, max-age=120' } });
+  } catch (e) {
+    if (format === 'text') return new Response('—', { status: 200, headers: { 'content-type': 'text/plain' } });
+    return NextResponse.json({ error: e?.message || 'gagal' }, { status: 400 });
+  }
+}
