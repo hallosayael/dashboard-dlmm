@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { fmtMoney, fmtPct, shortAddr, sinceStr, pnlCls } from '../lib/format';
+import { fmtMoney, fmtRoi, shortAddr, sinceStr, pnlCls } from '../lib/format';
 import { computeHealth, computePools, computeAudit, computeCompare, computeInsight } from '../lib/analytics';
 import HealthCard from './HealthCard';
 
@@ -172,7 +172,7 @@ export default function AnalyzeModal({
             return (
               <div className="pair-row tp-row" key={p.positionAddress || i} onClick={() => onSelectPosition && onSelectPosition(p)}>
                 <span className="lbl">{sinceStr(p.closedAt)} <span className="dim">· fee {m(p.feesSol, { compact: true, unit: false })}</span></span>
-                <span className={cls}>{m(p.pnlSol, { compact: true, unit: false })} <span className="dim">{fmtPct(p.pnlPct)}</span></span>
+                <span className={cls}>{m(p.pnlSol, { compact: true, unit: false })} <span className="dim">{fmtRoi(p.pnlSol, p.pnlPct)}</span></span>
               </div>
             );
           })}
