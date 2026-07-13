@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { fmtMoney, fmtRoi, shortAddr, sinceStr, pnlCls } from '../lib/format';
+import { fmtMoney, fmtRoi, shortAddr, sinceStr, pnlCls, pnlState } from '../lib/format';
 import { computeHealth, computePools, computeAudit, computeCompare, computeInsight } from '../lib/analytics';
 import HealthCard from './HealthCard';
 
@@ -180,20 +180,29 @@ export default function AnalyzeModal({
       );
       footer = <button className="fbtn" onClick={() => setDetailPair(null)}><span className="fk">[esc]</span> back</button>;
     } else {
-      const pools = computePools(positions).slice(0, 8);
+      const all = computePools(positions);
+      // pool terbaik & terburuk — LP perlu tahu keduanya (mana yang menguras modal).
+      const winners = all.filter((o) => pnlState(o.pnl) > 0).slice(0, 5);
+      const losers = all.filter((o) => pnlState(o.pnl) < 0).sort((a, b) => a.pnl - b.pnl).slice(0, 5);
+      const poolRow = (o, i) => (
+        <div className="pair-row" key={o.pair} onClick={() => setDetailPair(o.pair)}>
+          <div className="tp-row"><span><span className="dim">{i + 1}</span> <span className="cy">{o.pair}</span></span>
+            <span className={pnlCls(o.pnl)}>{m(o.pnl, { compact: true, unit: false })}</span></div>
+          <div className="tp-subrow">{o.trades} trade · {Math.round(o.winRate * 100)}% win<span className="tp-chev">›</span></div>
+        </div>
+      );
       body = (
         <>
-          <div className="tp-sec">top profit · klik pair untuk detail</div>
-          {pools.map((o, i) => {
-            return (
-              <div className="pair-row" key={o.pair} onClick={() => setDetailPair(o.pair)}>
-                <div className="tp-row"><span><span className="dim">{i + 1}</span> <span className="cy">{o.pair}</span></span>
-                  <span className={pnlCls(o.pnl)}>{m(o.pnl, { compact: true, unit: false })}</span></div>
-                <div className="tp-subrow">{o.trades} trade · {Math.round(o.winRate * 100)}% win<span className="tp-chev">›</span></div>
-              </div>
-            );
-          })}
-          {!pools.length && <Empty />}
+          <div className="tp-sec">pool menguntungkan · klik pair untuk detail</div>
+          {winners.length ? winners.map(poolRow) : <div className="tp-ins">tidak ada pool profit</div>}
+          {losers.length > 0 && (
+            <>
+              <div className="tp-div" />
+              <div className="tp-sec">pool merugikan</div>
+              {losers.map(poolRow)}
+            </>
+          )}
+          {!all.length && <Empty />}
         </>
       );
       footer = <button className="fbtn" onClick={onClose}><span className="fk">[esc]</span> close</button>;
