@@ -6,7 +6,7 @@ import Chart from './Chart';
 import PositionModal from './PositionModal';
 import RecapCard from './RecapCard';
 import AnalyzeModal from './AnalyzeModal';
-import { fmtMoney, fmtPct, shortAddr, sinceStr, pnlState } from '../lib/format';
+import { fmtMoney, fmtRoi, shortAddr, sinceStr, pnlState } from '../lib/format';
 
 const PAGE_SIZE = 15;
 const RANGE_DAYS = { '7d': 7, '30d': 30, all: Infinity };
@@ -202,7 +202,7 @@ export default function Dashboard({ wallet, data, onReset }) {
                             <td>{m(p.depositSol, { compact: true, unit: false, sign: false })}</td>
                             <td className="gr">{m(p.feesSol, { compact: true, unit: false })}</td>
                             <td className={cls}>{m(p.pnlSol, { compact: true, unit: false })}</td>
-                            <td className={cls}>{fmtPct(p.pnlPct)}</td>
+                            <td className={cls}>{fmtRoi(p.pnlSol, p.pnlPct)}</td>
                             <td><span className={'tag ' + tag[0]}>{tag[1]}</span></td>
                           </tr>
                         );
@@ -224,7 +224,7 @@ export default function Dashboard({ wallet, data, onReset }) {
                         </div>
                         <div className="pcard-bot dim">
                           <span>{sinceStr(p.closedAt)} · fee {m(p.feesSol, { compact: true, unit: false })}</span>
-                          <span className={cls}>{fmtPct(p.pnlPct)}</span>
+                          <span className={cls}>{fmtRoi(p.pnlSol, p.pnlPct)}</span>
                         </div>
                       </div>
                     );
