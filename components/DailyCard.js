@@ -57,8 +57,16 @@ export default function DailyCard({ positions, day, month, year, cur, solUsd, us
   async function download() {
     if (!cardRef.current) return;
     setBusy(true);
+    const node = cardRef.current;
+    // simpan lebar asli, lalu paksa 620px saat capture supaya PNG selalu memakai
+    // tata-letak desktop (tidak reflow jadi jelek di layar HP yang sempit).
+    const prev = { width: node.style.width, maxWidth: node.style.maxWidth };
     try {
-      const node = cardRef.current;
+      node.style.width = '620px';
+      node.style.maxWidth = 'none';
+      // tunggu 2 frame supaya reflow ke lebar baru selesai sebelum difoto.
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
       const { toPng } = await import('html-to-image');
       const url = await Promise.race([
         toPng(node, {
@@ -78,6 +86,8 @@ export default function DailyCard({ positions, day, month, year, cur, solUsd, us
       console.error('[daily download]', err);
       alert('gagal membuat gambar: ' + (err && err.message ? err.message : err) + '\n(coba screenshot manual)');
     } finally {
+      node.style.width = prev.width;
+      node.style.maxWidth = prev.maxWidth;
       setBusy(false);
     }
   }
