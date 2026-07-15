@@ -139,6 +139,41 @@ html, body {
 .recap-dl:disabled { opacity: .6; cursor: default; }
 .recap-close { font-size: 12.5px; padding: 9px 18px; border-radius: 8px; border: 1px solid #2a3038; background: transparent; color: #8b949e; cursor: pointer; font-family: var(--font-mono); }
 
+/* ---------- daily recap card (klik pnl harian di tooltip kalender) ---------- */
+.dc-card {
+  background: #0b0e13; border: 1px solid #1b2128; border-radius: 14px; padding: 20px 22px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  font-size: 13px; line-height: 1.7; color: #c9d1d9;
+}
+.dc-card .gr { color: #3fb950; }
+.dc-card .rd { color: #f85149; }
+.dc-dim { color: #4d5560; }
+.dc-prompt { color: #3fb950; margin-bottom: 16px; }
+.dc-cmd { color: #c9d1d9; }
+.dc-body { display: flex; gap: 26px; align-items: center; flex-wrap: wrap; }
+/* pre: JANGAN wrap; box-drawing dijamin lebar-tetap → wajah selalu lurus */
+.dc-face { margin: 0; white-space: pre; font-variant-ligatures: none; font-size: 22px; line-height: 1.15; }
+.dc-info { flex: 1; min-width: 220px; }
+.dc-date { color: #4d5560; font-size: 11px; letter-spacing: 1px; }
+.dc-hero { display: flex; align-items: baseline; gap: 9px; margin: 3px 0 8px; }
+.dc-num { font-size: 40px; line-height: 1; font-weight: 500; }
+.dc-num.ev { color: #c9d1d9; }
+.dc-unit { color: #4d5560; font-size: 14px; }
+.dc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 22px; }
+.dc-k { color: #6e7681; display: inline-block; width: 78px; }
+.dc-blocks { margin-top: 16px; display: flex; gap: 4px; flex-wrap: wrap; }
+.dc-blk { width: 18px; height: 10px; }
+.dc-blk.p { background: #3fb950; }
+.dc-blk.l { background: #f85149; }
+.dc-blk.n { background: #2f3742; }
+.dc-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; padding-top: 12px; border-top: 1px dashed #1b2128; font-size: 11px; }
+.dc-site { color: #a99cf5; }
+/* tombol buka kartu di dalam tooltip kalender */
+.cal-tip-open { cursor: pointer; }
+.cal-tip-open .cv-link { color: inherit; text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px; }
+.cal-tip-hint { margin-top: 7px; font-size: 10px; color: #6e7681; text-align: center; cursor: pointer; }
+.cal-tip-hint:hover { color: #a99cf5; }
+
 .perf-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 11px; flex-wrap: wrap; gap: 8px; }
 
 /* ---------- pnl breakdown ---------- */
