@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { fmtMoney, tzYMD, MONTH_NAMES, pnlState, pnlCls } from '../lib/format';
+import DailyCard from './DailyCard';
 
 const TZ = 7; // GMT+7
 const WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -45,6 +46,8 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
 
   const [idx, setIdx] = useState(months.length ? months.length - 1 : 0);
   const [tip, setTip] = useState(null); // { day, v, c, w, top, left, pinned }
+  const [card, setCard] = useState(null); // { day, positions } — kartu recap harian
+  const tipTimer = useRef(null); // hover-bridge: jeda tutup saat kursor pindah ke tooltip
 
   // tutup tooltip yang di-pin (mobile) saat tap di luar
   useEffect(() => {
@@ -71,8 +74,29 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
   const cval = (v, o) => fmtMoney(v, cur, solUsd, usdIdr, o);
 
   const showTip = (day, cell, el, pin) => {
+    if (tipTimer.current) { clearTimeout(tipTimer.current); tipTimer.current = null; }
     const r = el.getBoundingClientRect();
     setTip({ day, v: cell.v, c: cell.c, w: cell.w, e: cell.e, f: cell.f, top: r.top, left: r.left + r.width / 2, pinned: pin });
+  };
+
+  // beri jeda sebelum menutup tooltip hover, supaya kursor sempat pindah ke
+  // dalam tooltip untuk mengklik "buat kartu".
+  const scheduleClose = () => {
+    if (tipTimer.current) clearTimeout(tipTimer.current);
+    tipTimer.current = setTimeout(() => setTip((t) => (t && t.pinned ? t : null)), 180);
+  };
+  const cancelClose = () => {
+    if (tipTimer.current) { clearTimeout(tipTimer.current); tipTimer.current = null; }
+  };
+
+  // buka kartu recap untuk satu hari — ambil posisi hari itu dari data yang sama.
+  const openCard = (day) => {
+    const dayPos = positions.filter((p) => {
+      const t = tzYMD(p.closedAt, TZ);
+      return t.y === M.y && t.m === M.m && t.d === day;
+    });
+    setTip(null);
+    setCard({ day, positions: dayPos });
   };
 
   const numWeeks = Math.ceil((firstWeekday + daysInMonth) / 7);
@@ -105,7 +129,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
           key={col}
           className={'cc ' + tierClass(cell.v, maxAbs)}
           onMouseEnter={(e) => { if (!tip?.pinned) showTip(day, cell, e.currentTarget, false); }}
-          onMouseLeave={() => setTip((t) => (t && t.pinned ? t : null))}
+          onMouseLeave={() => { if (!tip?.pinned) scheduleClose(); }}
           onClick={(e) => {
             if (tip?.pinned && tip.day === day) setTip(null);
             else showTip(day, cell, e.currentTarget, true);
@@ -163,13 +187,39 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
       </div>
 
       {tip && (
-        <div className="cal-tip" style={{ top: tip.top, left: clampedLeft }}>
+        <div
+          className="cal-tip"
+          style={{ top: tip.top, left: clampedLeft }}
+          onMouseEnter={cancelClose}
+          onMouseLeave={() => { if (!tip.pinned) scheduleClose(); }}
+        >
           <div className="cal-tip-date">{tip.day} {MONTH_NAMES[M.m]} {M.y}</div>
-          <div className="cal-tip-row"><span className="dim">daily pnl</span><span className={pnlCls(tip.v)}>{cval(tip.v, {})}</span></div>
+          <div
+            className="cal-tip-row cal-tip-open"
+            onClick={(e) => { e.stopPropagation(); openCard(tip.day); }}
+            title="klik untuk buat kartu"
+          >
+            <span className="dim">daily pnl</span>
+            <span className={pnlCls(tip.v)}><span className="cv-link">{cval(tip.v, {})}</span></span>
+          </div>
           <div className="cal-tip-row"><span className="dim">fees</span><span className="gr">{cval(tip.f, {})}</span></div>
           <div className="cal-tip-row"><span className="dim">positions</span><span>{tip.c} <span className="dim">({tip.w}W / {tip.c - tip.w - tip.e}L{tip.e ? ` / ${tip.e}E` : ''})</span></span></div>
           <div className="cal-tip-row"><span className="dim">win rate</span><span className="br">{tip.c - tip.e > 0 ? Math.round((tip.w / (tip.c - tip.e)) * 100) : 0}%</span></div>
+          <div className="cal-tip-hint" onClick={(e) => { e.stopPropagation(); openCard(tip.day); }}>↓ buat kartu harian</div>
         </div>
+      )}
+
+      {card && (
+        <DailyCard
+          positions={card.positions}
+          day={card.day}
+          month={M.m}
+          year={M.y}
+          cur={cur}
+          solUsd={solUsd}
+          usdIdr={usdIdr}
+          onClose={() => setCard(null)}
+        />
       )}
     </div>
   );
