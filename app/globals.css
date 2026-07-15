@@ -151,8 +151,18 @@ html, body {
 .dc-prompt { color: #3fb950; margin-bottom: 16px; }
 .dc-cmd { color: #c9d1d9; }
 .dc-body { display: flex; gap: 26px; align-items: center; flex-wrap: wrap; }
-/* pre: JANGAN wrap; box-drawing dijamin lebar-tetap → wajah selalu lurus */
+/* DESKTOP: wajah ASCII blok (pre). box-drawing/blok lurus di font monospace desktop. */
 .dc-face { margin: 0; white-space: pre; font-variant-ligatures: none; font-size: 22px; line-height: 1.15; }
+/* HP: wajah bentuk CSS murni (border + lengkung), bukan teks → identik di semua
+   perangkat sentuh & PNG. warna ikut .gr/.rd/.dc-dim (currentColor). */
+.dc-facebox { flex: 0 0 auto; width: 88px; height: 80px; border: 7px solid; border-radius: 42%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 9px; box-sizing: border-box; }
+/* dua mata dalam flex + gap → dijamin ke SAMPING, tidak mungkin membungkus */
+.dc-eyes2 { display: flex; flex-wrap: nowrap; gap: 16px; font-size: 24px; font-weight: 500; line-height: 1; }
+.dc-eyes2 > span { display: block; }
+.dc-smile { width: 30px; height: 15px; border-bottom: 5px solid; border-radius: 0 0 26px 26px; }
+.dc-frown { width: 30px; height: 15px; border-top: 5px solid; border-radius: 26px 26px 0 0; margin-top: 6px; }
+.dc-flat { width: 26px; border-bottom: 5px solid; border-radius: 3px; }
 .dc-info { flex: 1; min-width: 220px; }
 .dc-date { color: #4d5560; font-size: 11px; letter-spacing: 1px; }
 .dc-hero { display: flex; align-items: baseline; gap: 9px; margin: 3px 0 8px; }
