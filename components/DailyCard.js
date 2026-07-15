@@ -5,23 +5,38 @@ import { fmtMoney, pnlState, pnlCls, MONTH_NAMES } from '../lib/format';
 
 const HARI = ['minggu', 'senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu'];
 
-// Wajah ASCII reaktif — bentuk BULAT (siluet blok ▄▀█). SEMUA baris tepat 9 sel &
-// hanya pakai ASCII + box-drawing (U+2500–257F) + block element (U+2580–259F) yang
-// dijamin lebar-tetap di tiap font monospace → tidak akan miring di PC, HP, maupun
-// hasil PNG (html-to-image skipFonts pakai Consolas/Cascadia).
+// DUA gaya wajah, dipilih per-perangkat:
+//  - DESKTOP (pointer mouse): ASCII blok bulat — tampil bagus karena font monospace
+//    desktop (Consolas) merender blok ▄▀█ dengan lebar konsisten.
+//  - HP/TABLET (pointer sentuh): bentuk CSS — font HP merender blok ASCII tidak
+//    konsisten (miring), jadi dipakai border+lengkung yang identik di semua perangkat.
 const FACE_UP = [' ▄▀▀▀▀▀▄ ', '█ $   $ █', '█  ╰─╯  █', ' ▀▄▄▄▄▄▀ '];
 const FACE_DOWN = [' ▄▀▀▀▀▀▄ ', '█ ╥   ╥ █', '█  ╭─╮  █', ' ▀▄▄▄▄▄▀ '];
 const FACE_FLAT = [' ▄▀▀▀▀▀▄ ', '█ -   - █', '█  ───  █', ' ▀▄▄▄▄▄▀ '];
 
-function faceFor(state) {
+function faceAscii(state) {
   if (state > 0) return FACE_UP;
   if (state < 0) return FACE_DOWN;
   return FACE_FLAT;
+}
+function faceParts(state) {
+  if (state > 0) return { eye: '$', mouth: 'dc-smile' };   // profit — mata duit, senyum
+  if (state < 0) return { eye: 'T', mouth: 'dc-frown' };   // loss — sedih, cemberut
+  return { eye: '-', mouth: 'dc-flat' };                    // impas — datar
 }
 
 export default function DailyCard({ positions, day, month, year, cur, solUsd, usdIdr, onClose }) {
   const cardRef = useRef(null);
   const [busy, setBusy] = useState(false);
+  // perangkat sentuh (HP/tablet) → wajah CSS; mouse (PC) → wajah ASCII.
+  // default false (ASCII) lalu dikoreksi setelah mount agar aman dari hydration.
+  const [touch, setTouch] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      setTouch(window.matchMedia('(pointer: coarse)').matches);
+    }
+  }, []);
 
   useEffect(() => {
     const h = (e) => { if (e.key === 'Escape') onClose(); };
@@ -46,7 +61,8 @@ export default function DailyCard({ positions, day, month, year, cur, solUsd, us
   const winRate = (w + l) ? Math.round((w / (w + l)) * 100) : 0;
 
   const state = pnlState(pnl);
-  const face = faceFor(state);
+  const face = faceAscii(state);          // dipakai di desktop
+  const { eye, mouth } = faceParts(state); // dipakai di HP
   const cls = pnlCls(pnl);            // gr / rd / ev
   const faceCls = state > 0 ? 'gr' : state < 0 ? 'rd' : 'dc-dim';
 
@@ -99,7 +115,14 @@ export default function DailyCard({ positions, day, month, year, cur, solUsd, us
           <div className="dc-prompt">meridian@dlmm:~$ <span className="dc-cmd">dlmm-day {iso}</span></div>
 
           <div className="dc-body">
-            <pre className={'dc-face ' + faceCls}>{face.join('\n')}</pre>
+            {touch ? (
+              <div className={'dc-facebox ' + faceCls}>
+                <div className="dc-eyes2"><span>{eye}</span><span>{eye}</span></div>
+                <div className={mouth} />
+              </div>
+            ) : (
+              <pre className={'dc-face ' + faceCls}>{face.join('\n')}</pre>
+            )}
             <div className="dc-info">
               <div className="dc-date">{tanggalUpper}</div>
               <div className="dc-hero">
