@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getWalletData } from '../../../lib/meteora';
+import { computeHealth } from '../../../lib/analytics';
 import { fmtMoney, tzYMD, pnlState } from '../../../lib/format';
 
 export const dynamic = 'force-dynamic';
@@ -52,19 +53,35 @@ function compute(data, denom, range) {
     if (idx >= 0 && idx < DAYS) spark[DAYS - 1 - idx] += p.pnlSol;
   }
 
+  // heatmap: net pnl harian 30 hari terakhir (SOL), urut lama -> baru — utk layout ticker/statusline
+  const D30 = 30;
+  const days30 = new Array(D30).fill(0);
+  for (const p of positions) {
+    const idx = nowDay - Math.floor((p.closedAt + TZ * 3600) / 86400);
+    if (idx >= 0 && idx < D30) days30[D30 - 1 - idx] += p.pnlSol;
+  }
+
+  // skor wallet-health (heuristik internal, sama dgn dashboard) — utk layout statusline/glance
+  const h = computeHealth(ranged);
+
   const walletShort = (data.wallets && data.wallets[0]) || 'wallet';
   const label = data.demo ? 'demo' : (data.wallets && data.wallets.length > 1 ? data.wallets.length + ' wallets' : walletShort.slice(0, 4) + '…' + walletShort.slice(-4));
 
   return {
     // angka mentah (SOL)
     netSol, todaySol, feesSol, winRate, wins, losses, closed: ranged.length,
-    // string siap-tampil sesuai denom
+    // string siap-tampil sesuai denom (dgn unit)
     net: m(netSol), today: m(todaySol), fees: m(feesSol),
+    // versi tanpa unit — utk layout compact (ticker/statusline/glance) yg ruangnya sempit
+    netBare: m(netSol, { bare: true }), feesBare: m(feesSol, { bare: true }), todayBare: m(todaySol, { bare: true }),
     winrate: winRate + '%', count: String(ranged.length),
     updated: new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jakarta' }),
     label, denom, range,
     line: `net ${m(netSol)} · today ${m(todaySol)} · ${winRate}%`,
     spark: spark.map((v) => Math.round(v * 1e6) / 1e6),
+    days30: days30.map((v) => Math.round(v * 1e6) / 1e6),
+    health: h ? h.overall : null,
+    healthStatus: h ? h.status.t : '—',
   };
 }
 
