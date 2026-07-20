@@ -82,7 +82,7 @@ export default function MonthlyCard({ M, year, month, cur, solUsd, usdIdr, onClo
       gridChildren.push(
         <div className={'mo-cell ' + tierClass(c.v, maxAbs)} key={key}>
           <span className="mo-dn">{day}</span>
-          <span className="mo-pv">{cval(c.v, compactBare)}</span>
+          <span className="mo-pv">{cval(c.v, compactSym)}</span>
         </div>
       );
     }
@@ -90,7 +90,7 @@ export default function MonthlyCard({ M, year, month, cur, solUsd, usdIdr, onClo
     gridChildren.push(
       <div className="mo-wk" key={`w${wi}`}>
         <span className="mo-wkl">W{wi + 1}</span>
-        <span className={'mo-wkv ' + pnlCls(wt)}>{cval(wt, compactBare)}</span>
+        <span className={'mo-wkv ' + pnlCls(wt)}>{cval(wt, compactSym)}</span>
       </div>
     );
   }
