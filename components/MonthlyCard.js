@@ -29,7 +29,10 @@ export default function MonthlyCard({ M, year, month, cur, solUsd, usdIdr, onClo
   }, [onClose]);
 
   const cval = (v, o) => fmtMoney(v, cur, solUsd, usdIdr, o);
-  const compactBare = { compact: true, bare: true };
+  const compactBare = { compact: true, bare: true }; // sel grid: tanpa simbol (biar muat)
+  // net + ringkasan: DENGAN simbol untuk USD/IDR ($/Rp). SOL tetap tanpa embel-embel
+  // (judul sudah menulis "· SOL", dan angka SOL sudah jelas).
+  const compactSym = cur === 'sol' ? compactBare : { compact: true };
 
   // tata letak grid — logika sama persis dengan Calendar.js
   const firstWeekday = new Date(Date.UTC(year, month, 1)).getUTCDay();
@@ -135,15 +138,15 @@ export default function MonthlyCard({ M, year, month, cur, solUsd, usdIdr, onClo
             </div>
             <div className="mo-net">
               <div className="mo-net-l">net bulan</div>
-              <div className={'mo-net-v ' + pnlCls(M.total)}>{cval(M.total, { bare: true })}</div>
+              <div className={'mo-net-v ' + pnlCls(M.total)}>{cval(M.total, compactSym)}</div>
               <div className="mo-net-l">{winRate}% win · <span className="gr">{M.green}W</span>·<span className="rd">{M.red}L</span></div>
             </div>
           </div>
 
           <div className="mo-summary">
-            <span>fees <span className="gr">{cval(fees, compactBare)}</span></span>
-            {hasDays && <span>terbaik <span className="gr">{bestD} ({cval(bestV, compactBare)})</span></span>}
-            {hasDays && <span>terburuk <span className="rd">{worstD} ({cval(worstV, compactBare)})</span></span>}
+            <span>fees <span className="gr">{cval(fees, compactSym)}</span></span>
+            {hasDays && <span>terbaik <span className="gr">{bestD} ({cval(bestV, compactSym)})</span></span>}
+            {hasDays && <span>terburuk <span className="rd">{worstD} ({cval(worstV, compactSym)})</span></span>}
             <span>posisi <span className="br">{pos}</span></span>
           </div>
 
