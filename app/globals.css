@@ -184,6 +184,44 @@ html, body {
 .cal-tip-hint { margin-top: 7px; font-size: 10px; color: #6e7681; text-align: center; cursor: pointer; }
 .cal-tip-hint:hover { color: #a99cf5; }
 
+/* ---------- kartu PnL bulanan (share) ---------- */
+.mo-wrap { width: 660px; max-width: 100%; }
+.mo-card {
+  background: #0b0e13; border: 1px solid #1b2128; border-radius: 14px; padding: 20px 22px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  color: #c9d1d9; box-sizing: border-box;
+}
+.mo-card .gr { color: #3fb950; }
+.mo-card .rd { color: #f85149; }
+.mo-card .br { color: var(--text); }
+.mo-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.mo-prompt { font-size: 12px; color: #3fb950; }
+.mo-cmd { color: #c9d1d9; }
+.mo-title { font-size: 21px; letter-spacing: 1px; margin-top: 7px; }
+.mo-denom { font-size: 12px; color: #4d5560; letter-spacing: 0; }
+.mo-net { text-align: right; white-space: nowrap; }
+.mo-net-l { font-size: 11px; color: #4d5560; }
+.mo-net-v { font-size: 25px; line-height: 1.15; }
+.mo-summary { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 11px; color: #6e7681;
+  border-top: 1px dashed #1b2128; border-bottom: 1px dashed #1b2128; padding: 9px 0; margin: 11px 0 12px; }
+.mo-grid { display: grid; grid-template-columns: repeat(7, 1fr) 1.15fr; gap: 4px; }
+.mo-wd { font-size: 10px; color: #4d5560; text-align: center; padding-bottom: 3px; }
+.mo-wd.mo-wkh { color: #5b6b8c; }
+.mo-cell { border-radius: 4px; padding: 4px 5px 5px; min-height: 44px; display: flex;
+  flex-direction: column; justify-content: space-between; overflow: hidden; }
+.mo-cell.mo-none { background: #10141a; }
+.mo-cell.mo-empty { background: transparent; }
+.mo-dn { font-size: 10px; color: #9aa4b0; line-height: 1; }
+.mo-pv { font-size: 10.5px; line-height: 1; text-align: right; white-space: nowrap; color: #d7dde3; }
+.mo-wk { background: #121a2e; border: 1px solid #1e2a45; border-radius: 4px; display: flex;
+  flex-direction: column; justify-content: center; align-items: flex-end; padding: 4px 7px; }
+.mo-wkl { font-size: 8.5px; color: #5b6b8c; }
+.mo-wkv { font-size: 10.5px; white-space: nowrap; }
+.mo-foot { display: flex; justify-content: space-between; align-items: center;
+  border-top: 1px dashed #1b2128; margin-top: 13px; padding-top: 9px; font-size: 10px; }
+.mo-site { color: #a99cf5; }
+.mo-legend { color: #4d5560; }
+
 .perf-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 11px; flex-wrap: wrap; gap: 8px; }
 
 /* ---------- pnl breakdown ---------- */
@@ -258,6 +296,12 @@ html, body {
 }
 .navbtn:hover:not(:disabled) { color: var(--text); }
 .navbtn:disabled { opacity: .35; cursor: default; }
+.cal-share {
+  margin-left: 8px; background: #13301d; border: 1px solid #245d33; color: #52b98a;
+  border-radius: 6px; cursor: pointer; padding: 3px 10px; font-size: 11px;
+  font-family: var(--font-mono); line-height: 1.4;
+}
+.cal-share:hover { background: #164d29; color: #6ee39c; }
 
 .cg { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
 .wdrow { margin-bottom: 6px; }
