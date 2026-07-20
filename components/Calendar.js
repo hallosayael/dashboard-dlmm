@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fmtMoney, tzYMD, MONTH_NAMES, pnlState, pnlCls } from '../lib/format';
 import DailyCard from './DailyCard';
+import MonthlyCard from './MonthlyCard';
 
 const TZ = 7; // GMT+7
 const WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -47,6 +48,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
   const [idx, setIdx] = useState(months.length ? months.length - 1 : 0);
   const [tip, setTip] = useState(null); // { day, v, c, w, top, left, pinned }
   const [card, setCard] = useState(null); // { day, positions } — kartu recap harian
+  const [monthCard, setMonthCard] = useState(false); // kartu pnl bulanan (share)
   const tipTimer = useRef(null); // hover-bridge: jeda tutup saat kursor pindah ke tooltip
 
   // tutup tooltip yang di-pin (mobile) saat tap di luar
@@ -167,6 +169,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
           <button className="navbtn" onClick={() => setIdx((i) => Math.max(0, i - 1))} disabled={safeIdx === 0} aria-label="bulan sebelumnya">‹</button>
           <span className="dim"> {MONTH_NAMES[M.m]} </span>
           <button className="navbtn" onClick={() => setIdx((i) => Math.min(months.length - 1, i + 1))} disabled={safeIdx === months.length - 1} aria-label="bulan berikutnya">›</button>
+          <button className="cal-share" onClick={() => setMonthCard(true)} title="buat kartu pnl bulanan">↗ share</button>
         </span>
       </div>
 
@@ -219,6 +222,18 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
           solUsd={solUsd}
           usdIdr={usdIdr}
           onClose={() => setCard(null)}
+        />
+      )}
+
+      {monthCard && (
+        <MonthlyCard
+          M={M}
+          year={M.y}
+          month={M.m}
+          cur={cur}
+          solUsd={solUsd}
+          usdIdr={usdIdr}
+          onClose={() => setMonthCard(false)}
         />
       )}
     </div>
