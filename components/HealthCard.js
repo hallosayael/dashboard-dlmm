@@ -50,6 +50,7 @@ export default function HealthCard({ innerRef, health, positions, range, walletL
   const h = health;
   const wins = positions.filter((p) => pnlState(p.pnlSol) > 0).length;
   const losses = positions.filter((p) => pnlState(p.pnlSol) < 0).length;
+  const evenN = h.n - wins - losses; // impas (pnl membulat ke 0.0000) — biar W+L+E = total
 
   // fee coverage = fee ÷ kerugian harga. Breakeven di 1.00x.
   // Kalau harga justru menguntungkan, tidak ada yang perlu "ditutup" -> n/a.
@@ -97,7 +98,7 @@ export default function HealthCard({ innerRef, health, positions, range, walletL
           <div className="hc-kv"><span className="hc-k">range</span>{range} · {h.n} closed</div>
           <div className="hc-kv">
             <span className="hc-k">win rate</span>{Math.round(h.winRate * 100)}%
-            <span className="dimc"> ({wins}W / {losses}L)</span>
+            <span className="dimc"> ({wins}W / {losses}L{evenN > 0 ? ` / ${evenN}E` : ''})</span>
           </div>
           <div className="hc-kv">
             <span className="hc-k">coverage</span>
