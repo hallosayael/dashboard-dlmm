@@ -222,6 +222,20 @@ html, body {
 .mo-site { color: #a99cf5; }
 .mo-legend { color: #4d5560; }
 
+/* ---------- daily margin (analyze) ---------- */
+.dimc { color: #4d5560; }
+.mg-card { background: #0b0e13; padding: 14px 16px; border-radius: 12px; }
+.mg-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.mg-tbl th { font-size: 10px; color: #4d5560; font-weight: 400; text-align: right; padding: 0 0 7px; }
+.mg-tbl th.l { text-align: left; }
+.mg-tbl td { text-align: right; padding: 5px 0; border-top: 1px solid #14181f; white-space: nowrap; }
+.mg-tbl td.l { text-align: left; color: #9aa4b0; }
+.mg-tbl .mg-tot td { border-top: 1px dashed #2a3038; padding-top: 9px; font-weight: 500; }
+/* tombol "mata" mati -> blur angka net & fees (ikut ter-capture saat download) */
+.mg-hide { filter: blur(5px); user-select: none; }
+.mg-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 11px; padding-top: 8px; border-top: 1px dashed #1b2128; font-size: 10px; }
+.mg-site { color: #a99cf5; }
+
 .perf-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 11px; flex-wrap: wrap; gap: 8px; }
 
 /* ---------- pnl breakdown ---------- */
