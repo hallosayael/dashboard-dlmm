@@ -351,6 +351,9 @@ export default function AnalyzeModal({
 
     body = (
       <div className="mg-card" ref={marginRef}>
+        <div className="mg-prompt">
+          <span className="gr">meridian@dlmm</span><span className="dim">:</span><span className="cy">~</span><span className="dim">$</span> analyze daily-margin
+        </div>
         <div className="tp-sec">daily margin <span className="dim">· {range}</span></div>
         {dayRows.length === 0 ? <Empty /> : (
           <table className="mg-tbl">
@@ -386,10 +389,12 @@ export default function AnalyzeModal({
     <div className="modal-overlay" onClick={onClose}>
       <div className="tpop" onClick={(e) => e.stopPropagation()}>
         <div className="tp-scroll" ref={cardRef}>
-          <div className="tp-echo">
-            <span className="gr">meridian@dlmm</span><span className="dim">:</span>
-            <span className="cy">~</span><span className="dim">$</span> {echo}
-          </div>
+          {command !== 'daily-margin' && (
+            <div className="tp-echo">
+              <span className="gr">meridian@dlmm</span><span className="dim">:</span>
+              <span className="cy">~</span><span className="dim">$</span> {echo}
+            </div>
+          )}
           {body}
           <div className="tp-cursorline">$ <span className="tp-cursor" /></div>
         </div>
