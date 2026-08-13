@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { fmtMoney, fmtRoi, shortAddr, sinceStr, pnlCls, pnlState } from '../lib/format';
+import { fmtMoney, fmtRoi, shortAddr, sinceStr, pnlCls, pnlState, tzYMD, MONTH_NAMES } from '../lib/format';
 import { computeHealth, computePools, computeAudit, computeCompare, computeInsight } from '../lib/analytics';
 import HealthCard from './HealthCard';
 
@@ -28,6 +28,7 @@ const CMD_LABEL = {
   audit: 'audit',
   compare: 'compare',
   insight: 'insight',
+  'daily-margin': 'daily-margin',
 };
 
 export default function AnalyzeModal({
@@ -40,6 +41,9 @@ export default function AnalyzeModal({
   const cardRef = useRef(null);
   // kartu share khusus PNG (wallet-health) — bukan popup di layar
   const healthRef = useRef(null);
+  // daily-margin: kartu tabel + tombol "mata" (sembunyikan angka net/fees).
+  const marginRef = useRef(null);
+  const [marginHidden, setMarginHidden] = useState(false);
 
   const m = (sol, o) => fmtMoney(sol, cur, solUsd, usdIdr, o);
 
@@ -94,8 +98,8 @@ export default function AnalyzeModal({
   }, [command, positions, range]);
 
   async function exportPng() {
-    // wallet-health punya kartu share sendiri; perintah lain jatuh ke popup.
-    const node = healthRef.current || cardRef.current;
+    // wallet-health & daily-margin punya kartu sendiri; perintah lain jatuh ke popup.
+    const node = healthRef.current || marginRef.current || cardRef.current;
     if (!node) return;
     setBusy(true);
     try {
@@ -305,6 +309,77 @@ export default function AnalyzeModal({
       );
     }
     footer = <button className="fbtn" onClick={onClose}><span className="fk">[esc]</span> close</button>;
+  }
+
+  else if (command === 'daily-margin') {
+    // agregasi per hari (rentang aktif), urut tanggal naik — margin = net ÷ fees.
+    const map = new Map();
+    for (const p of positions) {
+      const t = tzYMD(p.closedAt, 7);
+      const k = `${t.y}-${t.m}-${t.d}`;
+      let o = map.get(k);
+      if (!o) { o = { y: t.y, mo: t.m, d: t.d, net: 0, fees: 0, n: 0 }; map.set(k, o); }
+      o.net += Number(p.pnlSol) || 0;
+      o.fees += Number(p.feesSol) || 0;
+      o.n += 1;
+    }
+    const dayRows = [...map.values()].sort((a, b) => (a.y - b.y) || (a.mo - b.mo) || (a.d - b.d));
+    const tNet = dayRows.reduce((s, r) => s + r.net, 0);
+    const tFees = dayRows.reduce((s, r) => s + r.fees, 0);
+    const tN = dayRows.reduce((s, r) => s + r.n, 0);
+
+    const marginPct = (net, fees) => (fees > 1e-9 ? Math.round((net / fees) * 100) : null);
+    const mgCls = (pct) => (pct === null ? 'dimc' : pct < 0 ? 'rd' : pct > 100 ? 'am' : 'gr');
+    const mgTxt = (pct) => (pct === null ? '—' : (pct > 0 ? '+' : '') + pct + '%');
+    const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+    const hide = marginHidden ? ' mg-hide' : '';
+    // unit:false = buang suffix " SOL" (kepanjangan di sel); USD/IDR tetap punya simbol $/Rp
+    const money = (v, o) => m(v, { compact: true, unit: false, ...o });
+
+    const cells = (label, net, fees, n, isTot) => {
+      const pct = marginPct(net, fees);
+      return (
+        <>
+          <td className="l">{label}</td>
+          <td className={pnlCls(net) + hide}>{money(net)}</td>
+          <td className={'gr' + hide}>{money(fees, { sign: false })}</td>
+          <td className={mgCls(pct)}>{mgTxt(pct)}</td>
+          <td className={isTot ? 'br' : 'dimc'}>{n}</td>
+        </>
+      );
+    };
+
+    body = (
+      <div className="mg-card" ref={marginRef}>
+        <div className="tp-sec">daily margin <span className="dim">· {range}</span></div>
+        {dayRows.length === 0 ? <Empty /> : (
+          <table className="mg-tbl">
+            <thead>
+              <tr><th className="l">date</th><th>net pnl</th><th>fees</th><th>margin</th><th>n</th></tr>
+            </thead>
+            <tbody>
+              {dayRows.map((r, i) => (
+                <tr key={i}>{cells(`${cap(MONTH_NAMES[r.mo])} ${r.d}`, r.net, r.fees, r.n, false)}</tr>
+              ))}
+              <tr className="mg-tot">{cells('total', tNet, tFees, tN, true)}</tr>
+            </tbody>
+          </table>
+        )}
+        <div className="mg-foot">
+          <span className="mg-site">dashboard.dlmm.my.id</span>
+          <span className="dimc">margin = net ÷ fees</span>
+        </div>
+      </div>
+    );
+    footer = (
+      <>
+        <button className="fbtn" onClick={() => setMarginHidden((h) => !h)} title="sembunyikan / tampilkan angka net & fees">
+          <span className="fk">[{marginHidden ? '◎' : '◉'}]</span> {marginHidden ? 'tampilkan' : 'sembunyikan'} angka
+        </button>
+        <button className="fbtn" onClick={exportPng} disabled={busy}><span className="fk">[e]</span> {busy ? 'membuat…' : 'export'}</button>
+        <button className="fbtn" onClick={onClose}><span className="fk">[esc]</span> close</button>
+      </>
+    );
   }
 
   return (
