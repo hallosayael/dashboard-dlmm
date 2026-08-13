@@ -225,6 +225,7 @@ html, body {
 /* ---------- daily margin (analyze) ---------- */
 .dimc { color: #4d5560; }
 .mg-card { background: #0b0e13; padding: 14px 16px; border-radius: 12px; }
+.mg-prompt { font-size: 12px; margin-bottom: 10px; }
 .mg-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
 .mg-tbl th { font-size: 10px; color: #4d5560; font-weight: 400; text-align: right; padding: 0 0 7px; }
 .mg-tbl th.l { text-align: left; }
