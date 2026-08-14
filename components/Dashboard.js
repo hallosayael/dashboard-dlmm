@@ -10,7 +10,7 @@ import { fmtMoney, fmtRoi, shortAddr, sinceStr, pnlState } from '../lib/format';
 
 const PAGE_SIZE = 15;
 const RANGE_DAYS = { '7d': 7, '30d': 30, all: Infinity };
-const ANALYZE_CMDS = ['wallet-health', 'pool-analysis', 'audit', 'compare', 'insight', 'daily-margin'];
+const ANALYZE_CMDS = ['wallet-health', 'pool-analysis', 'audit', 'compare', 'insight', 'daily-margin', 'hold-time', 'timing'];
 
 function Seg({ value, options, onChange }) {
   return (
