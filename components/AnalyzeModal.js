@@ -29,6 +29,8 @@ const CMD_LABEL = {
   compare: 'compare',
   insight: 'insight',
   'daily-margin': 'daily-margin',
+  'hold-time': 'hold-time',
+  timing: 'timing',
 };
 
 export default function AnalyzeModal({
@@ -385,11 +387,138 @@ export default function AnalyzeModal({
     );
   }
 
+  else if (command === 'hold-time') {
+    // ROI/win-rate per ember durasi hold (closedAt - createdAt).
+    const BK = [
+      { k: '<30m', max: 1800 }, { k: '30m–1j', max: 3600 }, { k: '1–2j', max: 7200 },
+      { k: '2–4j', max: 14400 }, { k: '>4j', max: Infinity },
+    ];
+    const bk = BK.map((b) => ({ ...b, n: 0, wins: 0, losses: 0, net: 0 }));
+    let noHold = 0;
+    for (const p of positions) {
+      if (!p.createdAt || !p.closedAt || p.closedAt <= p.createdAt) { noHold += 1; continue; }
+      const hold = p.closedAt - p.createdAt;
+      const b = bk.find((x) => hold < x.max) || bk[bk.length - 1];
+      b.n += 1; b.net += Number(p.pnlSol) || 0;
+      const st = pnlState(p.pnlSol);
+      if (st > 0) b.wins += 1; else if (st < 0) b.losses += 1;
+    }
+    const active = bk.filter((b) => b.n > 0);
+    const maxAbs = Math.max(1e-9, ...active.map((b) => Math.abs(b.net)));
+    const best = active.reduce((a, b) => (a && a.net >= b.net ? a : b), null);
+    const wr = (b) => (b.wins + b.losses ? Math.round((b.wins / (b.wins + b.losses)) * 100) : 0);
+    const money = (v) => m(v, { compact: true, unit: false });
+
+    body = (
+      <div className="mg-card" ref={marginRef}>
+        <div className="mg-prompt"><span className="gr">meridian@dlmm</span><span className="dim">:</span><span className="cy">~</span><span className="dim">$</span> analyze hold-time</div>
+        <div className="tp-sec">per durasi hold <span className="dim">· {range}</span></div>
+        {active.length === 0 ? <Empty /> : (
+          <div className="ht-grid">
+            {bk.map((b) => {
+              const w = Math.round((Math.abs(b.net) / maxAbs) * 100);
+              const pos = b.net >= 0;
+              const isBest = best && b.k === best.k && b.net > 0;
+              return (
+                <div className="ht-row" key={b.k}>
+                  <span className={isBest ? 'br' : 'ht-k'}>{b.k}{isBest ? ' ◄' : ''}</span>
+                  <span className="ht-track"><span className="ht-bar" style={{ width: (b.n ? Math.max(6, w) : 0) + '%', background: pos ? '#247a38' : '#8b1f1f' }} /></span>
+                  <span className="dimc ht-n">{b.n} · {wr(b)}%</span>
+                  <span className={pos ? 'gr' : 'rd'}>{money(b.net)}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {best && best.net > 0 && (
+          <div className="an-note"><span className="am">! sweet spot: <span className="gr">{best.k}</span> — win {wr(best)}%, net tertinggi</span></div>
+        )}
+        <div className="mg-foot">
+          <span className="mg-site">dashboard.dlmm.my.id</span>
+          {noHold > 0 ? <span className="dimc">{noHold} posisi tanpa data waktu buka</span> : <span className="dimc">net per durasi hold</span>}
+        </div>
+      </div>
+    );
+    footer = (
+      <>
+        <button className="fbtn" onClick={exportPng} disabled={busy}><span className="fk">[e]</span> {busy ? 'membuat…' : 'export'}</button>
+        <button className="fbtn" onClick={onClose}><span className="fk">[esc]</span> close</button>
+      </>
+    );
+  }
+
+  else if (command === 'timing') {
+    // net pnl per jam (GMT+7) & per hari.
+    const TZ = 7;
+    const WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    const hrs = Array.from({ length: 24 }, () => ({ net: 0, n: 0 }));
+    const wds = Array.from({ length: 7 }, () => ({ net: 0, n: 0 }));
+    for (const p of positions) {
+      const d = new Date((p.closedAt + TZ * 3600) * 1000);
+      const v = Number(p.pnlSol) || 0;
+      const h = d.getUTCHours(), w = d.getUTCDay();
+      hrs[h].net += v; hrs[h].n += 1;
+      wds[w].net += v; wds[w].n += 1;
+    }
+    const maxH = Math.max(1e-9, ...hrs.map((x) => Math.abs(x.net)));
+    const maxW = Math.max(1e-9, ...wds.map((x) => Math.abs(x.net)));
+    const bg = (x, maxAbs) => {
+      if (x.n === 0) return '#10141a';
+      const st = pnlState(x.net);
+      if (st === 0) return '#23282f';
+      const r = maxAbs > 0 ? Math.abs(x.net) / maxAbs : 0;
+      const lvl = r > 0.66 ? 2 : r > 0.33 ? 1 : 0;
+      return st > 0 ? ['#16291d', '#1c4d2c', '#247a38'][lvl] : ['#3a1c1e', '#6e2528', '#a8332f'][lvl];
+    };
+    const pick = (arr) => {
+      const d = arr.map((x, i) => ({ ...x, i })).filter((x) => x.n > 0);
+      if (!d.length) return { best: null, worst: null };
+      return { best: d.reduce((a, b) => (b.net > a.net ? b : a)), worst: d.reduce((a, b) => (b.net < a.net ? b : a)) };
+    };
+    const H = pick(hrs), Wk = pick(wds);
+    const anyData = hrs.some((x) => x.n > 0);
+    const hh = (i) => String(i).padStart(2, '0') + ':00';
+
+    body = (
+      <div className="mg-card" ref={marginRef}>
+        <div className="mg-prompt"><span className="gr">meridian@dlmm</span><span className="dim">:</span><span className="cy">~</span><span className="dim">$</span> analyze timing</div>
+        {!anyData ? <Empty /> : (
+          <>
+            <div className="tp-sec">per jam · GMT+7 <span className="dim">· {range}</span></div>
+            <div className="tm-hours">
+              {hrs.map((x, i) => <div key={i} className="tm-cell" style={{ background: bg(x, maxH) }} title={`${hh(i)} · ${x.n} pos`} />)}
+            </div>
+            <div className="tm-axis"><span>00</span><span>06</span><span>12</span><span>18</span><span>23</span></div>
+            <div className="tm-note">
+              {H.best && <>terbaik <span className="gr">{hh(H.best.i)}</span></>}
+              {H.worst && H.worst.net < 0 && <> · terburuk <span className="rd">{hh(H.worst.i)}</span></>}
+            </div>
+
+            <div className="tp-sec" style={{ marginTop: 16 }}>per hari</div>
+            <div className="tm-wd-head">{WD.map((w) => <span key={w}>{w}</span>)}</div>
+            <div className="tm-wd">{wds.map((x, i) => <div key={i} className="tm-wcell" style={{ background: bg(x, maxW) }} title={`${WD[i]} · ${x.n} pos`} />)}</div>
+            <div className="tm-note">
+              {Wk.best && <>hari terbaik <span className="gr">{WD[Wk.best.i]}</span></>}
+              {Wk.worst && Wk.worst.net < 0 && <> · terburuk <span className="rd">{WD[Wk.worst.i]}</span></>}
+            </div>
+          </>
+        )}
+        <div className="mg-foot"><span className="mg-site">dashboard.dlmm.my.id</span><span className="dimc">warna = net pnl</span></div>
+      </div>
+    );
+    footer = (
+      <>
+        <button className="fbtn" onClick={exportPng} disabled={busy}><span className="fk">[e]</span> {busy ? 'membuat…' : 'export'}</button>
+        <button className="fbtn" onClick={onClose}><span className="fk">[esc]</span> close</button>
+      </>
+    );
+  }
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="tpop" onClick={(e) => e.stopPropagation()}>
         <div className="tp-scroll" ref={cardRef}>
-          {command !== 'daily-margin' && (
+          {!['daily-margin', 'hold-time', 'timing'].includes(command) && (
             <div className="tp-echo">
               <span className="gr">meridian@dlmm</span><span className="dim">:</span>
               <span className="cy">~</span><span className="dim">$</span> {echo}
