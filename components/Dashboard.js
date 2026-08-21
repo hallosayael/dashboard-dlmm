@@ -22,7 +22,7 @@ function Seg({ value, options, onChange }) {
   );
 }
 
-export default function Dashboard({ wallet, data, onReset }) {
+export default function Dashboard({ wallet, data, onReset, onRefresh, refreshing }) {
   const positions = data.positions || [];
   const solUsd = data.solPrice;
   const usdIdr = data.usdIdr;
@@ -90,7 +90,14 @@ export default function Dashboard({ wallet, data, onReset }) {
           <span className="dot" style={{ background: '#d29922' }} />
           <span className="dot" style={{ background: '#3fb950' }} />
           <span className="ttl">meridian@dlmm: ~/closed-positions</span>
-          <button className="changebtn" onClick={onReset}>ganti wallet ↺</button>
+          <span className="bar-actions">
+            {onRefresh && (
+              <button className="changebtn refreshbtn" onClick={onRefresh} disabled={refreshing} title="ambil data terbaru">
+                {refreshing ? 'memuat…' : 'refresh ⟳'}
+              </button>
+            )}
+            <button className="changebtn" onClick={onReset}>ganti wallet ↺</button>
+          </span>
         </div>
 
         <div className="body">
