@@ -72,6 +72,11 @@ html, body {
   cursor: pointer;
 }
 .changebtn:hover { color: var(--text); border-color: #3a424c; }
+.bar-actions { margin-left: auto; display: flex; gap: 7px; }
+.bar-actions .changebtn { margin-left: 0; }
+.refreshbtn { color: #52b98a; border-color: #245d33; }
+.refreshbtn:hover:not(:disabled) { color: #6ee39c; border-color: #2f7a45; }
+.refreshbtn:disabled { opacity: .6; cursor: default; }
 
 .promptline { margin-bottom: 16px; word-break: break-all; }
 .demo-banner {
