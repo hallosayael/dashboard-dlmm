@@ -1,88 +1,99 @@
 'use client';
 
-// Isi kartu PnL bulanan — versi "hero recap": pixel $ raksasa yang membelah keluar
-// dari tepi kanan, tema terminal gelap. Otomatis merah + label "loss" saat bulan
-// minus (fees & biggest win tetap hijau — fee tetap didapat, posisi terbaik tetap ada
-// walau bulannya rugi). Rasio ~72:47 mengikuti sample yang dipakai sebagai acuan.
-// Komponen ini HANYA badan kartu (tanpa modal/overlay/tombol) — dipakai di dalam
-// MonthlyShareModal, yang mengurus swipe antar-gaya + tombol download/tutup.
+// Isi kartu PnL — versi "hero recap": pixel $ raksasa yang membelah keluar dari tepi
+// kanan, tema terminal gelap. Otomatis merah + label "loss" saat total minus
+// (fees & biggest win tetap hijau — fee tetap didapat, posisi terbaik tetap ada
+// walau totalnya rugi). Rasio ~72:47 mengikuti sample acuan.
+//
+// CAKUPAN DATA: berbeda dengan gaya kalender (yang membaca per-HARI dalam satu bulan),
+// kartu ini membaca SEMUA POSISI closed sampai sekarang (all-time, per-posisi).
+// Jadi W/L/E-nya jumlah posisi, bukan jumlah hari.
+//
+// CATATAN PNG: pixel $ digambar sebagai <rect> langsung dengan atribut fill eksplisit
+// (bukan <use href="#defs"> + currentColor). html-to-image memutus referensi <use>
+// saat meng-clone node, sehingga currentColor jatuh ke warna teks kartu dan $ ikut
+// jadi abu-putih di hasil download. Digambar langsung = warna dijamin ikut.
 
-import { fmtMoney, fmtRoi, pnlState, tzYMD, MONTH_NAMES } from '../lib/format';
+import { fmtMoney, fmtRoi, pnlState } from '../lib/format';
 
-export default function MonthlyCardHero({ cardRef, M, year, month, cur, solUsd, usdIdr, positions }) {
+// Peta piksel karakter "$" pada grid 5 x 7.
+const PIX_D = [
+  [2, 0],
+  [1, 1], [2, 1], [3, 1],
+  [0, 2], [2, 2],
+  [1, 3], [2, 3], [3, 3],
+  [2, 4], [4, 4],
+  [1, 5], [2, 5], [3, 5],
+  [2, 6],
+];
+
+function PixelDollar({ fill, className, style }) {
+  return (
+    <svg viewBox="0 0 5 7" className={className} style={style} aria-hidden="true">
+      {PIX_D.map(([x, y]) => (
+        <rect key={`${x}-${y}`} x={x} y={y} width="0.84" height="0.84" rx="0.1" fill={fill} />
+      ))}
+    </svg>
+  );
+}
+
+export default function MonthlyCardHero({ cardRef, cur, solUsd, usdIdr, positions }) {
   const cval = (v, o) => fmtMoney(v, cur, solUsd, usdIdr, o);
   const compactBare = { compact: true, bare: true };
   const compactSym = cur === 'sol' ? compactBare : { compact: true };
 
-  const monthPositions = (positions || []).filter((p) => {
-    const t = tzYMD(p.closedAt, 7);
-    return t.y === year && t.m === month;
-  });
+  const all = positions || [];
 
-  let fees = 0;
-  for (const d in M.days) fees += M.days[d].f;
-
-  let best = null;
-  for (const p of monthPositions) {
+  // Rekap all-time, dihitung PER POSISI (bukan per hari).
+  let realized = 0, fees = 0, wins = 0, losses = 0, evens = 0, best = null;
+  for (const p of all) {
+    realized += p.pnlSol;
+    fees += p.feesSol;
+    const st = pnlState(p.pnlSol);
+    if (st > 0) wins += 1; else if (st < 0) losses += 1; else evens += 1;
     if (!best || p.pnlSol > best.pnlSol) best = p;
   }
 
-  const closedCount = monthPositions.length;
-  const impasCount = monthPositions.filter((p) => pnlState(p.pnlSol) === 0).length;
-  const winRate = M.green + M.red > 0 ? Math.round((M.green / (M.green + M.red)) * 100) : 0;
-  const isLoss = M.total < 0;
-  const iso = `${year}-${String(month + 1).padStart(2, '0')}`;
+  // Win rate mengabaikan posisi impas — sama seperti panel summary di dashboard.
+  const winRate = (wins + losses) ? Math.round((wins / (wins + losses)) * 100) : 0;
+  const isLoss = realized < 0;
 
-  const now = new Date();
-  const stamp = `${now.getDate()} ${MONTH_NAMES[now.getMonth()]} ${now.getFullYear()}`;
-
-  const stateCls = isLoss ? 'r' : 'g';
+  const stateCls = isLoss ? 'mh-r' : 'mh-g';
   const pillBg = isLoss ? '#f85149' : '#3fb950';
   const pillFg = isLoss ? '#2b0808' : '#04150b';
   const pixColor = isLoss ? '#f85149' : '#3fb950';
-  const pixGhostColor = isLoss ? '#3a1414' : '#123420';
+  const pixGhost = isLoss ? '#3a1414' : '#123420';
 
   return (
     <div className="mh-card" ref={cardRef}>
-      <svg width="0" height="0" style={{ position: 'absolute' }} aria-hidden="true">
-        <defs>
-          <g id="mh-pixd" fill="currentColor">
-            <rect x="2" y="0" width=".84" height=".84" rx=".1" />
-            <rect x="1" y="1" width=".84" height=".84" rx=".1" /><rect x="2" y="1" width=".84" height=".84" rx=".1" /><rect x="3" y="1" width=".84" height=".84" rx=".1" />
-            <rect x="0" y="2" width=".84" height=".84" rx=".1" /><rect x="2" y="2" width=".84" height=".84" rx=".1" />
-            <rect x="1" y="3" width=".84" height=".84" rx=".1" /><rect x="2" y="3" width=".84" height=".84" rx=".1" /><rect x="3" y="3" width=".84" height=".84" rx=".1" />
-            <rect x="2" y="4" width=".84" height=".84" rx=".1" /><rect x="4" y="4" width=".84" height=".84" rx=".1" />
-            <rect x="1" y="5" width=".84" height=".84" rx=".1" /><rect x="2" y="5" width=".84" height=".84" rx=".1" /><rect x="3" y="5" width=".84" height=".84" rx=".1" />
-            <rect x="2" y="6" width=".84" height=".84" rx=".1" />
-          </g>
-        </defs>
-      </svg>
-
-      <svg viewBox="0 0 5 7" className="mh-pixghost" style={{ color: pixGhostColor }} aria-hidden="true"><use href="#mh-pixd" /></svg>
+      <PixelDollar fill={pixGhost} className="mh-pixghost" />
 
       <div className="mh-top">
-        <span><span className="mh-g">meridian@dlmm</span><span className="mh-dim2">:~$</span> <span className="mh-cmd">dlmm-recap {iso}</span></span>
-        <span className="mh-dim">{stamp}</span>
+        <span><span className="mh-g">meridian@dlmm</span><span className="mh-dim2">:~$</span> <span className="mh-cmd">dlmm-recap all</span></span>
+        <span className="mh-dim">{all.length} posisi closed</span>
       </div>
 
       <div className="mh-mid">
         <div className="mh-left">
-          <div className={'mh-plabel mh-' + stateCls}>{isLoss ? 'loss' : 'profit'} &middot; {MONTH_NAMES[month]} {year}</div>
-          <span className="mh-pill" style={{ background: pillBg, color: pillFg }}>{cval(M.total, compactSym)}</span>
-          <div className="mh-kv"><span className="mh-dim">realized</span> <b className={'mh-' + stateCls}>{cval(M.total, compactSym)}</b></div>
+          <div className={'mh-plabel ' + stateCls}>{isLoss ? 'loss' : 'profit'} &middot; all time</div>
+          <span className="mh-pill" style={{ background: pillBg, color: pillFg }}>{cval(realized, compactSym)}</span>
+          <div className="mh-kv"><span className="mh-dim">realized</span> <b className={stateCls}>{cval(realized, compactSym)}</b></div>
           <div className="mh-kv"><span className="mh-dim">fees earned</span> <b className="mh-g">{cval(fees, compactSym)}</b></div>
           <div className="mh-kv">
             <span className="mh-dim">biggest win</span>{' '}
             <b className="mh-g">{best ? `${best.pair} ${cval(best.pnlSol, { compact: true, unit: false })} (${fmtRoi(best.pnlSol, best.pnlPct)})` : '—'}</b>
           </div>
-          <div className="mh-kv"><span className="mh-dim">win rate</span> <b className="mh-num">{winRate}%</b> <span className="mh-dim2">({M.green}W / {M.red}L)</span></div>
+          <div className="mh-kv">
+            <span className="mh-dim">win rate</span> <b className="mh-num">{winRate}%</b>{' '}
+            <span className="mh-dim2">({wins}W / {losses}L{evens ? ` / ${evens}E` : ''})</span>
+          </div>
         </div>
-        <svg viewBox="0 0 5 7" className="mh-pix" style={{ color: pixColor }} aria-hidden="true"><use href="#mh-pixd" /></svg>
+        <PixelDollar fill={pixColor} className="mh-pix" />
       </div>
 
       <div className="mh-foot">
         <span className="mh-site">dashboard.dlmm.my.id</span>
-        <span className="mh-dim2">{closedCount} closed &middot; {impasCount} impas</span>
+        <span className="mh-dim2">{wins + losses + evens} closed &middot; {evens} impas</span>
       </div>
     </div>
   );
