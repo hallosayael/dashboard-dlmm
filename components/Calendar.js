@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fmtMoney, tzYMD, MONTH_NAMES, pnlState, pnlCls } from '../lib/format';
 import DailyCard from './DailyCard';
-import MonthlyCard from './MonthlyCard';
+import MonthlyShareModal from './MonthlyShareModal';
 
 const TZ = 7; // GMT+7
 const WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -226,7 +226,8 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
       )}
 
       {monthCard && (
-        <MonthlyCard
+        <MonthlyShareModal
+          positions={positions}
           M={M}
           year={M.y}
           month={M.m}
