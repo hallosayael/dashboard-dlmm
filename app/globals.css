@@ -242,7 +242,9 @@ html, body {
 .mh-top { display: flex; justify-content: space-between; align-items: center; font-size: 13px; position: relative; }
 .mh-cmd { color: #c9d1d9; }
 .mh-mid { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 0; position: relative; }
-.mh-left { display: flex; flex-direction: column; justify-content: center; }
+/* min-width:0 → baris panjang (mis. "biggest win PAIR/SOL +0.0310 (+4.4%)") membungkus
+   ke bawah, bukan menerobos ke area pixel $ dan terpotong tepi kartu. */
+.mh-left { display: flex; flex-direction: column; justify-content: center; flex: 1 1 auto; min-width: 0; }
 .mh-plabel { font-size: 14px; margin-bottom: 6px; }
 .mh-pill { display: inline-block; align-self: flex-start; font-weight: 700; border-radius: 14px; padding: 10px 20px; font-size: 38px; line-height: 1; margin-bottom: 16px; }
 .mh-kv { font-size: 16px; padding: 3px 0; }
