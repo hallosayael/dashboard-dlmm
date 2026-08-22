@@ -1,11 +1,11 @@
 'use client';
 
-// Kartu PnL bulanan untuk di-share: grid kalender (per hari) + kolom WEEK + ringkasan.
-// Di-capture pada lebar TETAP (640px) supaya hasil PNG sama rapi di PC maupun HP —
-// grid tidak reflow. Angka pakai formatter yang sama dgn kalender (compact+bare) jadi
-// tetap pendek di currency apa pun (SOL/USD/IDR) — tidak menumpuk / terpotong.
+// Isi kartu PnL bulanan — versi kalender: grid per hari + kolom WEEK + ringkasan.
+// Komponen ini HANYA badan kartu (tanpa modal/overlay/tombol) — dipakai di dalam
+// MonthlyShareModal, yang mengurus swipe antar-gaya + tombol download/tutup.
+// Lebar tetap 640px saat capture (diatur oleh MonthlyShareModal) supaya grid
+// tidak reflow dan hasil PNG rapi di PC maupun HP.
 
-import { useEffect, useRef, useState } from 'react';
 import { fmtMoney, pnlState, pnlCls, MONTH_NAMES } from '../lib/format';
 
 const WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -18,16 +18,7 @@ function tierClass(v, maxAbs) {
   return (st > 0 ? 'cg' : 'cr') + lvl;
 }
 
-export default function MonthlyCard({ M, year, month, cur, solUsd, usdIdr, onClose }) {
-  const cardRef = useRef(null);
-  const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    const h = (e) => { if (e.key === 'Escape') onClose(); };
-    window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
-  }, [onClose]);
-
+export default function MonthlyCard({ cardRef, M, year, month, cur, solUsd, usdIdr }) {
   const cval = (v, o) => fmtMoney(v, cur, solUsd, usdIdr, o);
   const compactBare = { compact: true, bare: true }; // sel grid: tanpa simbol (biar muat)
   // net + ringkasan: DENGAN simbol untuk USD/IDR ($/Rp). SOL tetap tanpa embel-embel
@@ -95,73 +86,32 @@ export default function MonthlyCard({ M, year, month, cur, solUsd, usdIdr, onClo
     );
   }
 
-  async function download() {
-    if (!cardRef.current) return;
-    setBusy(true);
-    const node = cardRef.current;
-    const prev = { width: node.style.width, maxWidth: node.style.maxWidth };
-    try {
-      // lebar tetap 640px saat capture → PNG selalu tata-letak penuh, tak reflow di HP.
-      node.style.width = '640px';
-      node.style.maxWidth = 'none';
-      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-      const { toPng } = await import('html-to-image');
-      const url = await Promise.race([
-        toPng(node, {
-          pixelRatio: 2, width: node.offsetWidth, height: node.offsetHeight,
-          backgroundColor: '#0b0e13', skipFonts: true,
-        }),
-        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 25s')), 25000)),
-      ]);
-      const a = document.createElement('a');
-      a.download = `dlmm-month-${iso}.png`;
-      a.href = url;
-      a.click();
-    } catch (err) {
-      console.error('[monthly download]', err);
-      alert('gagal membuat gambar: ' + (err && err.message ? err.message : err) + '\n(coba screenshot manual)');
-    } finally {
-      node.style.width = prev.width;
-      node.style.maxWidth = prev.maxWidth;
-      setBusy(false);
-    }
-  }
-
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="recap-wrap mo-wrap" onClick={(ev) => ev.stopPropagation()}>
-        <div className="mo-card" ref={cardRef}>
-          <div className="mo-head">
-            <div>
-              <div className="mo-prompt">meridian@dlmm:~$ <span className="mo-cmd">dlmm-month {iso}</span></div>
-              <div className="mo-title">{mUpper} <span className="mo-denom">· {denom}</span></div>
-            </div>
-            <div className="mo-net">
-              <div className="mo-net-l">net bulan</div>
-              <div className={'mo-net-v ' + pnlCls(M.total)}>{cval(M.total, compactSym)}</div>
-              <div className="mo-net-l">{winRate}% win · <span className="gr">{M.green}W</span>·<span className="rd">{M.red}L</span></div>
-            </div>
-          </div>
-
-          <div className="mo-summary">
-            <span>fees <span className="gr">{cval(fees, compactSym)}</span></span>
-            {hasDays && <span>terbaik <span className="gr">{bestD} ({cval(bestV, compactSym)})</span></span>}
-            {hasDays && <span>terburuk <span className="rd">{worstD} ({cval(worstV, compactSym)})</span></span>}
-            <span>posisi <span className="br">{pos}</span></span>
-          </div>
-
-          <div className="mo-grid">{gridChildren}</div>
-
-          <div className="mo-foot">
-            <span className="mo-site">dashboard.dlmm.my.id</span>
-            <span className="mo-legend">warna = besar-kecil pnl · WEEK = total mingguan</span>
-          </div>
+    <div className="mo-card" ref={cardRef}>
+      <div className="mo-head">
+        <div>
+          <div className="mo-prompt">meridian@dlmm:~$ <span className="mo-cmd">dlmm-month {iso}</span></div>
+          <div className="mo-title">{mUpper} <span className="mo-denom">· {denom}</span></div>
         </div>
-
-        <div className="recap-actions">
-          <button className="recap-dl" onClick={download} disabled={busy}>{busy ? 'membuat…' : '↓ download png'}</button>
-          <button className="recap-close" onClick={onClose}>tutup</button>
+        <div className="mo-net">
+          <div className="mo-net-l">net bulan</div>
+          <div className={'mo-net-v ' + pnlCls(M.total)}>{cval(M.total, compactSym)}</div>
+          <div className="mo-net-l">{winRate}% win · <span className="gr">{M.green}W</span>·<span className="rd">{M.red}L</span></div>
         </div>
+      </div>
+
+      <div className="mo-summary">
+        <span>fees <span className="gr">{cval(fees, compactSym)}</span></span>
+        {hasDays && <span>terbaik <span className="gr">{bestD} ({cval(bestV, compactSym)})</span></span>}
+        {hasDays && <span>terburuk <span className="rd">{worstD} ({cval(worstV, compactSym)})</span></span>}
+        <span>posisi <span className="br">{pos}</span></span>
+      </div>
+
+      <div className="mo-grid">{gridChildren}</div>
+
+      <div className="mo-foot">
+        <span className="mo-site">dashboard.dlmm.my.id</span>
+        <span className="mo-legend">warna = besar-kecil pnl · WEEK = total mingguan</span>
       </div>
     </div>
   );
