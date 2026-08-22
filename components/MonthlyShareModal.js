@@ -8,9 +8,11 @@ import { useEffect, useRef, useState } from 'react';
 import MonthlyCard from './MonthlyCard';
 import MonthlyCardHero from './MonthlyCardHero';
 
+// kalender = rekap bulan yang sedang dibuka (per hari).
+// hero     = rekap all-time (per posisi) — bukan per bulan, jadi namanya tanpa bulan.
 const STYLES = [
-  { key: 'calendar', label: 'kalender', file: (iso) => `dlmm-month-${iso}.png`, width: 640 },
-  { key: 'hero', label: 'terminal $', file: (iso) => `dlmm-recap-${iso}.png`, width: 640 },
+  { key: 'calendar', label: 'kalender · bulan ini', file: (iso) => `dlmm-month-${iso}.png`, width: 640 },
+  { key: 'hero', label: 'terminal $ · all time', file: () => 'dlmm-recap-alltime.png', width: 640 },
 ];
 
 export default function MonthlyShareModal({ positions, M, year, month, cur, solUsd, usdIdr, onClose }) {
@@ -99,7 +101,7 @@ export default function MonthlyShareModal({ positions, M, year, month, cur, solU
                 <MonthlyCard cardRef={calRef} M={M} year={year} month={month} cur={cur} solUsd={solUsd} usdIdr={usdIdr} />
               </div>
               <div className="share-slide">
-                <MonthlyCardHero cardRef={heroRef} M={M} year={year} month={month} cur={cur} solUsd={solUsd} usdIdr={usdIdr} positions={positions} />
+                <MonthlyCardHero cardRef={heroRef} cur={cur} solUsd={solUsd} usdIdr={usdIdr} positions={positions} />
               </div>
             </div>
           </div>
