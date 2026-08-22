@@ -227,6 +227,56 @@ html, body {
 .mo-site { color: #a99cf5; }
 .mo-legend { color: #4d5560; }
 
+/* ---------- kartu PnL bulanan · gaya "hero" (pixel $ raksasa) ---------- */
+.mh-card {
+  aspect-ratio: 72 / 47; background: #0b0e13; border: 1px solid #1b2128; border-radius: 14px;
+  padding: 26px 28px; font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  color: #c9d1d9; position: relative; overflow: hidden; box-sizing: border-box;
+  display: flex; flex-direction: column; width: 100%;
+}
+.mh-g { color: #3fb950; }
+.mh-r { color: #f85149; }
+.mh-num { color: #e6edf3; }
+.mh-dim { color: #6e7681; }
+.mh-dim2 { color: #4d5560; }
+.mh-top { display: flex; justify-content: space-between; align-items: center; font-size: 13px; position: relative; }
+.mh-cmd { color: #c9d1d9; }
+.mh-mid { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 0; position: relative; }
+.mh-left { display: flex; flex-direction: column; justify-content: center; }
+.mh-plabel { font-size: 14px; margin-bottom: 6px; }
+.mh-pill { display: inline-block; align-self: flex-start; font-weight: 700; border-radius: 14px; padding: 10px 20px; font-size: 38px; line-height: 1; margin-bottom: 16px; }
+.mh-kv { font-size: 16px; padding: 3px 0; }
+.mh-pix { height: 64%; width: auto; flex: 0 0 auto; }
+.mh-pixghost { position: absolute; right: -24px; top: 50%; transform: translateY(-50%); height: 150%; }
+.mh-foot { display: flex; justify-content: space-between; font-size: 11px; border-top: 1px dashed #1b2128; padding-top: 10px; position: relative; }
+.mh-site { color: #a99cf5; }
+
+/* ---------- pemilih gaya share bulanan (kalender vs hero, geser kiri/kanan) ---------- */
+.share-picker { display: flex; flex-direction: column; }
+.share-tabs { display: flex; gap: 6px; justify-content: center; margin-bottom: 12px; }
+.share-tab {
+  font-family: var(--font-mono); font-size: 11px; padding: 5px 14px; border-radius: 999px;
+  border: 1px solid var(--border); background: transparent; color: var(--dim); cursor: pointer;
+}
+.share-tab.on { border-color: #245d33; background: #13301d; color: #52b98a; }
+.share-stage { display: flex; align-items: center; gap: 6px; }
+.share-track { flex: 1; overflow: hidden; touch-action: pan-y; }
+.share-slides { display: flex; transition: transform .25s ease; }
+.share-slide { flex: 0 0 100%; min-width: 0; }
+.share-arrow {
+  flex: 0 0 auto; width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--win); color: var(--dim);
+  cursor: pointer; font-size: 15px; line-height: 1;
+}
+.share-arrow:hover:not(:disabled) { color: var(--text); border-color: var(--dim); }
+.share-arrow:disabled { opacity: .3; cursor: default; }
+.share-dots { display: flex; justify-content: center; gap: 6px; margin-top: 12px; }
+.share-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); cursor: pointer; }
+.share-dot.on { background: #52b98a; }
+@media (max-width: 480px) {
+  .share-arrow { display: none; }
+}
+
 /* ---------- daily margin (analyze) ---------- */
 .dimc { color: #4d5560; }
 .mg-card { background: #0b0e13; padding: 14px 16px; border-radius: 12px; }
