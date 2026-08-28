@@ -32,6 +32,9 @@ export default function Dashboard({ wallet, data, onReset, onRefresh, refreshing
 
   const [cur, setCur] = useState('sol');
   const [range, setRange] = useState('30d');
+  // zona waktu pengelompokan hari: WIB (GMT+7) atau UTC (samakan dgn Meteora).
+  const [tzLabel, setTzLabel] = useState('WIB');
+  const tz = tzLabel === 'UTC' ? 0 : 7;
   const [view, setView] = useState('chart');
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState(null);
@@ -106,7 +109,8 @@ export default function Dashboard({ wallet, data, onReset, onRefresh, refreshing
             <span className="cy">~/closed</span><span className="dim">$ </span>
             dlmm stats <span className="am">--wallet</span> {walletLabel}{' '}
             <span className="am">--closed</span> <span className="am">--denom</span> {cur}{' '}
-            <span className="am">--range</span> {range}<span className="termcur" />
+            <span className="am">--range</span> {range}{' '}
+            <span className="am">--tz</span> {tzLabel.toLowerCase()}<span className="termcur" />
           </div>
 
           {data.demo && (
@@ -123,6 +127,7 @@ export default function Dashboard({ wallet, data, onReset, onRefresh, refreshing
               <div className="statusline">
                 <span className="ctl"><span className="clbl">denom</span><Seg value={cur} options={['sol', 'usd', 'idr']} onChange={setCur} /></span>
                 <span className="ctl"><span className="clbl">range</span><Seg value={range} options={['7d', '30d', 'all']} onChange={setRange} /></span>
+                <span className="ctl"><span className="clbl">tz</span><Seg value={tzLabel} options={['WIB', 'UTC']} onChange={setTzLabel} /></span>
                 <span className="sl-actions">
                   <button className="sharebtn" onClick={() => setShowRecap(true)}>↗ share</button>
                   <span className="analyze-wrap">
@@ -186,7 +191,7 @@ export default function Dashboard({ wallet, data, onReset, onRefresh, refreshing
                 </div>
                 {view === 'chart'
                   ? <Chart positions={ranged} cur={cur} solUsd={solUsd} usdIdr={usdIdr} />
-                  : <Calendar positions={positions} cur={cur} solUsd={solUsd} usdIdr={usdIdr} />}
+                  : <Calendar positions={positions} cur={cur} solUsd={solUsd} usdIdr={usdIdr} tz={tz} tzLabel={tzLabel} />}
               </div>
 
               <div className="panel">
@@ -272,6 +277,8 @@ export default function Dashboard({ wallet, data, onReset, onRefresh, refreshing
           solUsd={solUsd}
           usdIdr={usdIdr}
           range={range}
+          tz={tz}
+          tzLabel={tzLabel}
           walletLabel={walletLabel}
           onSelectPosition={setSelected}
           onClose={() => setTool(null)}
