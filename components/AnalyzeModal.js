@@ -34,7 +34,7 @@ const CMD_LABEL = {
 };
 
 export default function AnalyzeModal({
-  command, positions, wallets, cur, solUsd, usdIdr, range, walletLabel, onSelectPosition, onClose,
+  command, positions, wallets, cur, solUsd, usdIdr, range, tz = 7, tzLabel = 'WIB', walletLabel, onSelectPosition, onClose,
 }) {
   const [detailPair, setDetailPair] = useState(null);
   const [overlay, setOverlay] = useState(false);
@@ -317,7 +317,7 @@ export default function AnalyzeModal({
     // agregasi per hari (rentang aktif), urut tanggal naik — margin = net ÷ fees.
     const map = new Map();
     for (const p of positions) {
-      const t = tzYMD(p.closedAt, 7);
+      const t = tzYMD(p.closedAt, tz);
       const k = `${t.y}-${t.m}-${t.d}`;
       let o = map.get(k);
       if (!o) { o = { y: t.y, mo: t.m, d: t.d, net: 0, fees: 0, n: 0 }; map.set(k, o); }
@@ -448,8 +448,8 @@ export default function AnalyzeModal({
   }
 
   else if (command === 'timing') {
-    // net pnl per jam (GMT+7) & per hari.
-    const TZ = 7;
+    // net pnl per jam & per hari (mengikuti toggle tz: WIB/UTC).
+    const TZ = tz;
     const WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
     const hrs = Array.from({ length: 24 }, () => ({ net: 0, n: 0 }));
     const wds = Array.from({ length: 7 }, () => ({ net: 0, n: 0 }));
@@ -484,7 +484,7 @@ export default function AnalyzeModal({
         <div className="mg-prompt"><span className="gr">meridian@dlmm</span><span className="dim">:</span><span className="cy">~</span><span className="dim">$</span> analyze timing</div>
         {!anyData ? <Empty /> : (
           <>
-            <div className="tp-sec">per jam · GMT+7 <span className="dim">· {range}</span></div>
+            <div className="tp-sec">per jam · {tzLabel === 'UTC' ? 'UTC' : 'GMT+7'} <span className="dim">· {range}</span></div>
             <div className="tm-hours">
               {hrs.map((x, i) => <div key={i} className="tm-cell" style={{ background: bg(x, maxH) }} title={`${hh(i)} · ${x.n} pos`} />)}
             </div>
