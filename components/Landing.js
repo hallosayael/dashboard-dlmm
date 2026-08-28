@@ -109,7 +109,7 @@ export default function Landing({ onAnalyze, loading, error, initial }) {
       </div>
 
       <div className="foot dim">
-        data: meteora portfolio api · harga sol: jupiter · hari GMT+7
+        data: meteora portfolio api · harga sol: jupiter · zona hari: WIB/UTC (bisa diganti)
       </div>
     </div>
   );
