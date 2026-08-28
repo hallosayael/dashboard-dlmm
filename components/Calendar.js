@@ -5,7 +5,6 @@ import { fmtMoney, tzYMD, MONTH_NAMES, pnlState, pnlCls } from '../lib/format';
 import DailyCard from './DailyCard';
 import MonthlyShareModal from './MonthlyShareModal';
 
-const TZ = 7; // GMT+7
 const WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 function tierClass(v, maxAbs) {
@@ -16,11 +15,11 @@ function tierClass(v, maxAbs) {
   return (st > 0 ? 'cg' : 'cr') + lvl;
 }
 
-export default function Calendar({ positions, cur, solUsd, usdIdr }) {
+export default function Calendar({ positions, cur, solUsd, usdIdr, tz = 7, tzLabel = 'WIB' }) {
   const { byMonth, months } = useMemo(() => {
     const map = {};
     for (const p of positions) {
-      const { y, m, d } = tzYMD(p.closedAt, TZ);
+      const { y, m, d } = tzYMD(p.closedAt, tz);
       const key = y + '-' + String(m).padStart(2, '0');
       if (!map[key]) map[key] = { y, m, days: {} };
       const cell = map[key].days[d] || (map[key].days[d] = { v: 0, c: 0, w: 0, e: 0, f: 0 });
@@ -43,7 +42,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
       o.total = total; o.green = green; o.red = red;
     }
     return { byMonth: map, months };
-  }, [positions]);
+  }, [positions, tz]);
 
   const [idx, setIdx] = useState(months.length ? months.length - 1 : 0);
   const [tip, setTip] = useState(null); // { day, v, c, w, top, left, pinned }
@@ -94,7 +93,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr }) {
   // buka kartu recap untuk satu hari — ambil posisi hari itu dari data yang sama.
   const openCard = (day) => {
     const dayPos = positions.filter((p) => {
-      const t = tzYMD(p.closedAt, TZ);
+      const t = tzYMD(p.closedAt, tz);
       return t.y === M.y && t.m === M.m && t.d === day;
     });
     setTip(null);
