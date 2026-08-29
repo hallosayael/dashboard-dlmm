@@ -123,10 +123,12 @@ export default function Calendar({ positions, cur, solUsd, usdIdr, tz = 7, tzLab
         dayCells.push(<div key={col} className="cc ce"><span className="cd">{day}</span></div>);
         continue;
       }
+      const dWins = cell.c - cell.e; // menang+kalah (impas dikecualikan)
+      const wr = dWins > 0 ? Math.round((cell.w / dWins) * 100) + '%' : '—';
       dayCells.push(
         <div
           key={col}
-          className={'cc ' + tierClass(cell.v, maxAbs)}
+          className={'cc ' + tierClass(cell.v)}
           onMouseEnter={(e) => { if (!tip?.pinned) showTip(day, cell, e.currentTarget, false); }}
           onMouseLeave={() => { if (!tip?.pinned) scheduleClose(); }}
           onClick={(e) => {
@@ -135,10 +137,8 @@ export default function Calendar({ positions, cur, solUsd, usdIdr, tz = 7, tzLab
           }}
         >
           <span className="cd">{day}</span>
-          <div className="cc-bot">
-            <span className="cpos">{cell.c} pos</span>
-            <span className="cv">{cval(cell.v, { compact: true, bare: true })}</span>
-          </div>
+          <span className="cv">{cval(cell.v, { compact: true, bare: true })}</span>
+          <span className="csub">{cell.c} pos · {wr}</span>
         </div>
       );
     }
