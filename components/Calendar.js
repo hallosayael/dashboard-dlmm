@@ -7,12 +7,10 @@ import MonthlyShareModal from './MonthlyShareModal';
 
 const WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
-function tierClass(v, maxAbs) {
+function tierClass(v) {
   const st = pnlState(v);
-  if (st === 0) return 'cb1'; // impas — netral
-  const ratio = maxAbs > 0 ? Math.abs(v) / maxAbs : 0;
-  const lvl = ratio > 0.66 ? 3 : ratio > 0.33 ? 2 : 1;
-  return (st > 0 ? 'cg' : 'cr') + lvl;
+  if (st === 0) return 'cb1';        // impas — netral
+  return st > 0 ? 'cg3' : 'cr3';     // 1 warna: plus = hijau terang, minus = merah terang
 }
 
 export default function Calendar({ positions, cur, solUsd, usdIdr, tz = 7, tzLabel = 'WIB' }) {
