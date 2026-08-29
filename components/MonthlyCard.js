@@ -10,12 +10,10 @@ import { fmtMoney, pnlState, pnlCls, MONTH_NAMES } from '../lib/format';
 
 const WD = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
-function tierClass(v, maxAbs) {
+function tierClass(v) {
   const st = pnlState(v);
   if (st === 0) return 'cb1';
-  const ratio = maxAbs > 0 ? Math.abs(v) / maxAbs : 0;
-  const lvl = ratio > 0.66 ? 3 : ratio > 0.33 ? 2 : 1;
-  return (st > 0 ? 'cg' : 'cr') + lvl;
+  return st > 0 ? 'cg3' : 'cr3';     // 1 warna: plus = hijau terang, minus = merah terang
 }
 
 export default function MonthlyCard({ cardRef, M, year, month, cur, solUsd, usdIdr }) {
@@ -111,7 +109,7 @@ export default function MonthlyCard({ cardRef, M, year, month, cur, solUsd, usdI
 
       <div className="mo-foot">
         <span className="mo-site">dashboard.dlmm.my.id</span>
-        <span className="mo-legend">warna = besar-kecil pnl · WEEK = total mingguan</span>
+        <span className="mo-legend">hijau = profit · merah = rugi · WEEK = total mingguan</span>
       </div>
     </div>
   );
