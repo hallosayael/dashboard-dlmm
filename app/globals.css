@@ -674,15 +674,16 @@ html, body {
   .cal-scroll { overflow-x: visible; }
   .cal-grid { min-width: 0; }
   .cg8, .cg { gap: 2px; margin-bottom: 2px; }
-  .cc { min-height: 46px; padding: 3px 1px; gap: 1px; overflow: hidden; }
-  .cc .cv { font-size: clamp(8px, 2.5vw, 12px); letter-spacing: 0; white-space: nowrap; }
+  /* container query: font diukur dari lebar SEL, jadi angka selalu muat (SOL/$/IDR) */
+  .cc { min-height: 46px; padding: 3px 1px; gap: 1px; overflow: hidden; container-type: inline-size; }
+  .cc .cv { font-size: clamp(7px, 2vw, 10px); font-size: min(11px, 20cqi); letter-spacing: 0; white-space: nowrap; }
   .cc .cd { font-size: 9px; top: 3px; right: 4px; }
   .cpos { display: none; }
   .wd, .wd.wkh { font-size: 8px; padding-left: 0; }
-  .wkcell { padding: 4px 2px; }
+  .wkcell { padding: 4px 2px; container-type: inline-size; }
   .wkcell .wkl { font-size: 7.5px; }
-  .wkcell .wkv { font-size: clamp(8px, 2.2vw, 11px); letter-spacing: 0; white-space: nowrap; }
-  .totcell { padding: 5px 1px; font-size: clamp(7.5px, 2vw, 10px); letter-spacing: 0; }
+  .wkcell .wkv { font-size: clamp(7px, 1.9vw, 10px); font-size: min(10px, 19cqi); letter-spacing: 0; white-space: nowrap; }
+  .totcell { padding: 5px 1px; container-type: inline-size; font-size: clamp(7px, 1.8vw, 9.5px); font-size: min(9.5px, 18cqi); letter-spacing: 0; white-space: nowrap; }
   .promptline { font-size: 12px; }
   .ttl { font-size: 11px; }
   .actions { flex-direction: column; }
