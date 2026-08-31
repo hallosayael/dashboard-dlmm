@@ -26,8 +26,6 @@ export default function MonthlyCard({ cardRef, M, year, month, cur, solUsd, usdI
   // tata letak grid — logika sama persis dengan Calendar.js
   const firstWeekday = new Date(Date.UTC(year, month, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
-  let maxAbs = 0;
-  for (const d in M.days) maxAbs = Math.max(maxAbs, Math.abs(M.days[d].v));
   const numWeeks = Math.ceil((firstWeekday + daysInMonth) / 7);
   const weekTotals = new Array(numWeeks).fill(0);
   for (let day = 1; day <= daysInMonth; day++) {
@@ -69,9 +67,9 @@ export default function MonthlyCard({ cardRef, M, year, month, cur, solUsd, usdI
         continue;
       }
       gridChildren.push(
-        <div className={'mo-cell ' + tierClass(c.v, maxAbs)} key={key}>
+        <div className={'mo-cell ' + tierClass(c.v)} key={key}>
           <span className="mo-dn">{day}</span>
-          <span className="mo-pv">{cval(c.v, compactSym)}</span>
+          <span className={'mo-pv ' + pnlCls(c.v)}>{cval(c.v, compactSym)}</span>
         </div>
       );
     }
