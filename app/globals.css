@@ -683,7 +683,8 @@ html, body {
   .wkcell { padding: 4px 2px; container-type: inline-size; }
   .wkcell .wkl { font-size: 7.5px; }
   .wkcell .wkv { font-size: clamp(7px, 1.9vw, 10px); font-size: min(10px, 19cqi); letter-spacing: 0; white-space: nowrap; }
-  .totcell { padding: 5px 1px; container-type: inline-size; font-size: clamp(7px, 1.8vw, 9.5px); font-size: min(9.5px, 18cqi); letter-spacing: 0; white-space: nowrap; }
+  .totcell { padding: 5px 1px; container-type: inline-size; }
+  .totcell span { font-size: clamp(7px, 1.8vw, 9.5px); font-size: min(9.5px, 18cqi); letter-spacing: 0; white-space: nowrap; }
   .promptline { font-size: 12px; }
   .ttl { font-size: 11px; }
   .actions { flex-direction: column; }
