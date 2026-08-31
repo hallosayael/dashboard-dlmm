@@ -222,7 +222,7 @@ html, body {
 .mo-cell.cg3 { background: #0f2318; }
 .mo-cell.cr3 { background: #2a1216; }
 .mo-cell.cb1 { background: #191d24; }
-.mo-dn { position: absolute; top: 4px; right: 6px; font-size: 9px; color: #7d8694; line-height: 1; }
+.mo-dn { position: absolute; top: 4px; right: 6px; font-size: 8px; color: #7d8694; line-height: 1; }
 .mo-pv { font-size: 12px; font-weight: 500; line-height: 1; white-space: nowrap; color: #d7dde3; }
 .mo-sub { font-size: 8px; color: #6a727e; line-height: 1; white-space: nowrap; }
 .mo-wk { background: #121a2e; border: 1px solid #1e2a45; border-radius: 4px; display: flex;
