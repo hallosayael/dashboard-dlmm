@@ -57,7 +57,9 @@ export default function MonthlyShareModal({ positions, M, year, month, cur, solU
       const url = await Promise.race([
         toPng(node, {
           pixelRatio: 2, width: node.offsetWidth, height: node.offsetHeight,
-          backgroundColor: '#0b0e13', skipFonts: true,
+          // skipFonts:false → embed font Inter (same-origin dari next/font) supaya
+          // PNG hasil share ikut pakai Inter, bukan fallback sans biasa.
+          backgroundColor: '#0b0e13', skipFonts: false,
         }),
         new Promise((_, rej) => setTimeout(() => rej(new Error('timeout 25s')), 25000)),
       ]);
