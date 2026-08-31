@@ -223,7 +223,7 @@ html, body {
 .mo-cell.cr3 { background: #2a1216; }
 .mo-cell.cb1 { background: #191d24; }
 .mo-dn { position: absolute; top: 4px; right: 6px; font-size: 9px; color: #7d8694; line-height: 1; }
-.mo-pv { font-size: 12px; font-weight: 600; line-height: 1; white-space: nowrap; color: #d7dde3; }
+.mo-pv { font-size: 12px; font-weight: 500; line-height: 1; white-space: nowrap; color: #d7dde3; }
 .mo-sub { font-size: 8px; color: #6a727e; line-height: 1; white-space: nowrap; }
 .mo-wk { background: #121a2e; border: 1px solid #1e2a45; border-radius: 4px; display: flex;
   flex-direction: column; justify-content: center; align-items: flex-end; padding: 4px 7px; }
@@ -409,7 +409,7 @@ html, body {
   border: 1px solid rgba(255,255,255,.04);
 }
 .cc .cd { position: absolute; top: 5px; right: 7px; font-size: 12px; color: #6b7686; }
-.cc .cv { font-size: 16px; font-weight: 700; text-align: center; line-height: 1; }
+.cc .cv { font-size: 16px; font-weight: 500; text-align: center; line-height: 1; }
 .ce { background: #141821; }
 .ce .cd { color: #4d5560; }
 /* gaya "tint gelap" (ala Fabriq): background redup, warna terang ada di teks pnl */
