@@ -414,6 +414,11 @@ html, body {
 .cg1, .cg2, .cg3 { background: #10251a; border-color: #1c3a29; }
 .cr1, .cr2, .cr3 { background: #281416; border-color: #3d1f21; }
 .cb1, .cb2, .cb3 { background: #161b22; border-color: #232a33; }
+/* KALENDER SAJA: hijau/merah lebih teduh (ala Fabriq). Angka pnl, kolom WEEK,
+   baris total, & net bulan di header. Subtitle "pos · %" (.cpos) TIDAK tersentuh.
+   Sisa situs tetap warna tajam --green/--red. */
+.cal-grid .gr, .cal-head .gr { color: #5cae79; }
+.cal-grid .rd, .cal-head .rd { color: #cd6a5f; }
 
 /* calendar: 7 hari + kolom WEEK + baris total harian */
 .cal-scroll { overflow-x: auto; }
