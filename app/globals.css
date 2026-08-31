@@ -217,7 +217,11 @@ html, body {
   flex-direction: column; justify-content: space-between; overflow: hidden; }
 .mo-cell.mo-none { background: #10141a; }
 .mo-cell.mo-empty { background: transparent; }
-.mo-dn { font-size: 10px; color: rgba(255,255,255,0.82); line-height: 1; }
+/* kartu share: tint gelap gaya (31 agust) — terpisah dari kalender live (26) */
+.mo-cell.cg3 { background: #0f2318; }
+.mo-cell.cr3 { background: #2a1216; }
+.mo-cell.cb1 { background: #191d24; }
+.mo-dn { font-size: 10px; color: #9aa4b0; line-height: 1; }
 .mo-pv { font-size: 10.5px; line-height: 1; text-align: right; white-space: nowrap; color: #d7dde3; }
 .mo-wk { background: #121a2e; border: 1px solid #1e2a45; border-radius: 4px; display: flex;
   flex-direction: column; justify-content: center; align-items: flex-end; padding: 4px 7px; }
@@ -671,7 +675,7 @@ html, body {
   .cal-grid { min-width: 0; }
   .cg8, .cg { gap: 3px; margin-bottom: 3px; }
   .cc { min-height: 46px; padding: 3px 4px; gap: 2px; overflow: hidden; }
-  .cc .cv { font-size: 12px; white-space: nowrap; }
+  .cc .cv { font-size: clamp(7.5px, 2.4vw, 13px); white-space: nowrap; }
   .cc .cd { font-size: 10px; top: 3px; right: 4px; }
   .cpos { display: none; }
   .wd, .wd.wkh { font-size: 8px; padding-left: 1px; }
