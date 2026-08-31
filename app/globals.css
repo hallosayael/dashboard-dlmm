@@ -673,16 +673,16 @@ html, body {
   /* kalender: muat penuh layar HP, tanpa scroll samping */
   .cal-scroll { overflow-x: visible; }
   .cal-grid { min-width: 0; }
-  .cg8, .cg { gap: 3px; margin-bottom: 3px; }
-  .cc { min-height: 46px; padding: 3px 4px; gap: 2px; overflow: hidden; }
-  .cc .cv { font-size: clamp(7.5px, 2.4vw, 13px); white-space: nowrap; }
-  .cc .cd { font-size: 10px; top: 3px; right: 4px; }
+  .cg8, .cg { gap: 2px; margin-bottom: 2px; }
+  .cc { min-height: 46px; padding: 3px 1px; gap: 1px; overflow: hidden; }
+  .cc .cv { font-size: clamp(8px, 2.5vw, 12px); letter-spacing: 0; white-space: nowrap; }
+  .cc .cd { font-size: 9px; top: 3px; right: 4px; }
   .cpos { display: none; }
-  .wd, .wd.wkh { font-size: 8px; padding-left: 1px; }
-  .wkcell { padding: 3px 4px; }
+  .wd, .wd.wkh { font-size: 8px; padding-left: 0; }
+  .wkcell { padding: 4px 2px; }
   .wkcell .wkl { font-size: 7.5px; }
-  .wkcell .wkv { font-size: 8.5px; }
-  .totcell { padding: 4px 2px; font-size: 8px; }
+  .wkcell .wkv { font-size: clamp(8px, 2.2vw, 11px); letter-spacing: 0; white-space: nowrap; }
+  .totcell { padding: 5px 1px; font-size: clamp(7.5px, 2vw, 10px); letter-spacing: 0; }
   .promptline { font-size: 12px; }
   .ttl { font-size: 11px; }
   .actions { flex-direction: column; }
@@ -690,8 +690,7 @@ html, body {
 }
 
 @media (max-width: 400px) {
-  .cc .cv { font-size: 9px; }
-  .cc .cd { font-size: 8.5px; }
-  .cpos { display: none; }
-  .cc { min-height: 38px; }
+  /* biar clamp() cv tetap jalan (jangan di-override fixed) — cukup rapatkan sel */
+  .cc { min-height: 40px; }
+  .cc .cd { font-size: 8px; }
 }
