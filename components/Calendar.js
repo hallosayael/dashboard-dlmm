@@ -67,8 +67,6 @@ export default function Calendar({ positions, cur, solUsd, usdIdr, tz = 7, tzLab
 
   const firstWeekday = new Date(Date.UTC(M.y, M.m, 1)).getUTCDay();
   const daysInMonth = new Date(Date.UTC(M.y, M.m + 1, 0)).getUTCDate();
-  let maxAbs = 0;
-  for (const d in M.days) maxAbs = Math.max(maxAbs, Math.abs(M.days[d].v));
   const winRate = M.green + M.red > 0 ? (M.green / (M.green + M.red)) * 100 : 0;
   const cval = (v, o) => fmtMoney(v, cur, solUsd, usdIdr, o);
 
@@ -123,8 +121,7 @@ export default function Calendar({ positions, cur, solUsd, usdIdr, tz = 7, tzLab
         dayCells.push(<div key={col} className="cc ce"><span className="cd">{day}</span></div>);
         continue;
       }
-      const dWins = cell.c - cell.e; // menang+kalah (impas dikecualikan)
-      const wr = dWins > 0 ? Math.round((cell.w / dWins) * 100) + '%' : '—';
+      const dwr = cell.c - cell.e > 0 ? Math.round((cell.w / (cell.c - cell.e)) * 100) + '%' : '—';
       dayCells.push(
         <div
           key={col}
@@ -137,8 +134,8 @@ export default function Calendar({ positions, cur, solUsd, usdIdr, tz = 7, tzLab
           }}
         >
           <span className="cd">{day}</span>
-          <span className="cv">{cval(cell.v, { compact: true, bare: true })}</span>
-          <span className="csub">{cell.c} pos · {wr}</span>
+          <span className={'cv ' + pnlCls(cell.v)}>{cval(cell.v, { compact: true, bare: true })}</span>
+          <span className="cpos">{cell.c} pos · {dwr}</span>
         </div>
       );
     }
