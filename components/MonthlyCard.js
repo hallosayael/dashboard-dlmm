@@ -69,7 +69,7 @@ export default function MonthlyCard({ cardRef, M, year, month, cur, solUsd, usdI
       gridChildren.push(
         <div className={'mo-cell ' + tierClass(c.v)} key={key}>
           <span className="mo-dn">{day}</span>
-          <span className={'mo-pv ' + pnlCls(c.v)}>{cval(c.v, compactSym)}</span>
+          <span className="mo-pv">{cval(c.v, compactSym)}</span>
         </div>
       );
     }
