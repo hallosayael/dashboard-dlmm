@@ -66,10 +66,12 @@ export default function MonthlyCard({ cardRef, M, year, month, cur, solUsd, usdI
         gridChildren.push(<div className="mo-cell mo-none" key={key}><span className="mo-dn">{day}</span></div>);
         continue;
       }
+      const wr = c.c - c.e > 0 ? Math.round((c.w / (c.c - c.e)) * 100) + '%' : '—';
       gridChildren.push(
         <div className={'mo-cell ' + tierClass(c.v)} key={key}>
           <span className="mo-dn">{day}</span>
-          <span className="mo-pv">{cval(c.v, compactSym)}</span>
+          <span className={'mo-pv ' + pnlCls(c.v)}>{cval(c.v, compactSym)}</span>
+          <span className="mo-sub">{c.c} pos · {wr}</span>
         </div>
       );
     }
@@ -107,7 +109,7 @@ export default function MonthlyCard({ cardRef, M, year, month, cur, solUsd, usdI
 
       <div className="mo-foot">
         <span className="mo-site">dashboard.dlmm.my.id</span>
-        <span className="mo-legend">hijau = profit · merah = rugi · WEEK = total mingguan</span>
+        <span className="mo-legend">pos · win% per hari · WEEK = total mingguan</span>
       </div>
     </div>
   );
