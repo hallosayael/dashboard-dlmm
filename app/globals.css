@@ -213,16 +213,18 @@ html, body {
 .mo-grid { display: grid; grid-template-columns: repeat(7, 1fr) 1.15fr; gap: 4px; }
 .mo-wd { font-size: 10px; color: #4d5560; text-align: center; padding-bottom: 3px; }
 .mo-wd.mo-wkh { color: #5b6b8c; }
-.mo-cell { border-radius: 4px; padding: 4px 5px 5px; min-height: 44px; display: flex;
-  flex-direction: column; justify-content: space-between; overflow: hidden; }
+/* sel: rata tengah (ala Fabriq) — value di tengah, tanggal pojok kanan-atas, pos·win% di bawah */
+.mo-cell { position: relative; border-radius: 5px; padding: 5px; min-height: 54px; display: flex;
+  flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 2px; overflow: hidden; }
 .mo-cell.mo-none { background: #10141a; }
 .mo-cell.mo-empty { background: transparent; }
 /* kartu share: tint gelap gaya (31 agust) — terpisah dari kalender live (26) */
 .mo-cell.cg3 { background: #0f2318; }
 .mo-cell.cr3 { background: #2a1216; }
 .mo-cell.cb1 { background: #191d24; }
-.mo-dn { font-size: 10px; color: #9aa4b0; line-height: 1; }
-.mo-pv { font-size: 10.5px; line-height: 1; text-align: right; white-space: nowrap; color: #d7dde3; }
+.mo-dn { position: absolute; top: 4px; right: 6px; font-size: 9px; color: #7d8694; line-height: 1; }
+.mo-pv { font-size: 12px; font-weight: 600; line-height: 1; white-space: nowrap; color: #d7dde3; }
+.mo-sub { font-size: 8px; color: #6a727e; line-height: 1; white-space: nowrap; }
 .mo-wk { background: #121a2e; border: 1px solid #1e2a45; border-radius: 4px; display: flex;
   flex-direction: column; justify-content: center; align-items: flex-end; padding: 4px 7px; }
 .mo-wkl { font-size: 8.5px; color: #5b6b8c; }
@@ -414,11 +416,12 @@ html, body {
 .cg1, .cg2, .cg3 { background: #10251a; border-color: #1c3a29; }
 .cr1, .cr2, .cr3 { background: #281416; border-color: #3d1f21; }
 .cb1, .cb2, .cb3 { background: #161b22; border-color: #232a33; }
-/* KALENDER SAJA: hijau/merah lebih teduh (ala Fabriq). Angka pnl, kolom WEEK,
-   baris total, & net bulan di header. Subtitle "pos · %" (.cpos) TIDAK tersentuh.
-   Sisa situs tetap warna tajam --green/--red. */
-.cal-grid .gr, .cal-head .gr { color: #5cae79; }
-.cal-grid .rd, .cal-head .rd { color: #cd6a5f; }
+/* KALENDER + KARTU BULANAN: hijau/merah lebih teduh (ala Fabriq). Subtitle
+   "pos · %" TIDAK tersentuh. Sisa situs tetap warna tajam --green/--red. */
+.cal-grid .gr, .cal-head .gr, .mo-card .gr { color: #5cae79; }
+.cal-grid .rd, .cal-head .rd, .mo-card .rd { color: #cd6a5f; }
+/* Font Inter (ala Fabriq) KHUSUS kalender live + kartu bulanan. Sisa situs mono. */
+.cal-head, .cal-grid, .mo-card { font-family: var(--font-inter), 'Inter', ui-sans-serif, sans-serif; }
 
 /* calendar: 7 hari + kolom WEEK + baris total harian */
 .cal-scroll { overflow-x: auto; }
