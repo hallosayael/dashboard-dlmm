@@ -409,7 +409,7 @@ html, body {
   border: 1px solid rgba(255,255,255,.04);
 }
 .cc .cd { position: absolute; top: 5px; right: 7px; font-size: 12px; color: #6b7686; }
-.cc .cv { font-size: 16px; font-weight: 500; text-align: center; line-height: 1; }
+.cc .cv { font-size: 14px; font-weight: 500; text-align: center; line-height: 1; }
 .ce { background: #141821; }
 .ce .cd { color: #4d5560; }
 /* gaya "tint gelap" (ala Fabriq): background redup, warna terang ada di teks pnl */
