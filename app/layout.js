@@ -1,4 +1,9 @@
 import './globals.css';
+import { Inter } from 'next/font/google';
+
+// Inter (variable) — dipakai KHUSUS untuk kalender & kartu PnL bulanan lewat
+// CSS var --font-inter (lihat globals.css). Sisa situs tetap monospace.
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
 
 export const metadata = {
   title: 'DLMM Closed PnL',
@@ -13,7 +18,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="id">
+    <html lang="id" className={inter.variable}>
       <body>{children}</body>
     </html>
   );
