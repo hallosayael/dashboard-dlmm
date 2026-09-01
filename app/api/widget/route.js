@@ -61,6 +61,18 @@ function compute(data, denom, range) {
     if (idx >= 0 && idx < D30) days30[D30 - 1 - idx] += p.pnlSol;
   }
 
+  // grid BULAN KALENDER berjalan (GMT+7) — utk widget "kalender per bulan" (ala web).
+  // monthDays[i] = net pnl hari (i+1); monthFirst = weekday tgl 1 (0=Min..6=Sab).
+  const MON = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+  const daysInMonth = new Date(Date.UTC(today.y, today.m + 1, 0)).getUTCDate();
+  const monthFirst = new Date(Date.UTC(today.y, today.m, 1)).getUTCDay();
+  const monthDays = new Array(daysInMonth).fill(0);
+  for (const p of positions) {
+    const d = tzYMD(p.closedAt, TZ);
+    if (d.y === today.y && d.m === today.m) monthDays[d.d - 1] += p.pnlSol;
+  }
+  const monthLabel = MON[today.m] + ' ' + today.y;
+
   // skor wallet-health (heuristik internal, sama dgn dashboard) — utk layout statusline/glance
   const h = computeHealth(ranged);
 
@@ -80,6 +92,8 @@ function compute(data, denom, range) {
     line: `net ${m(netSol)} · today ${m(todaySol)} · ${winRate}%`,
     spark: spark.map((v) => Math.round(v * 1e6) / 1e6),
     days30: days30.map((v) => Math.round(v * 1e6) / 1e6),
+    monthDays: monthDays.map((v) => Math.round(v * 1e6) / 1e6),
+    monthFirst, monthLabel,
     health: h ? h.overall : null,
     healthStatus: h ? h.status.t : '—',
   };
