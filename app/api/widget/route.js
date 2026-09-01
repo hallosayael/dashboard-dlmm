@@ -47,11 +47,15 @@ function compute(data, denom, range) {
   // sparkline: net pnl harian 14 hari terakhir (SOL), urut lama -> baru
   const DAYS = 14;
   const nowDay = Math.floor((Date.now() / 1000 + TZ * 3600) / 86400);
-  const spark = new Array(DAYS).fill(0);
+  const sparkDaily = new Array(DAYS).fill(0);
   for (const p of positions) {
     const idx = nowDay - Math.floor((p.closedAt + TZ * 3600) / 86400);
-    if (idx >= 0 && idx < DAYS) spark[DAYS - 1 - idx] += p.pnlSol;
+    if (idx >= 0 && idx < DAYS) sparkDaily[DAYS - 1 - idx] += p.pnlSol;
   }
+  // spark = equity KUMULATIF (running total) 14 hari → kurva "modal bertumbuh" (ala Meteora),
+  // bukan pnl harian yang naik-turun.
+  const spark = [];
+  { let run = 0; for (let i = 0; i < DAYS; i++) { run += sparkDaily[i]; spark.push(run); } }
 
   // heatmap: net pnl harian 30 hari terakhir (SOL), urut lama -> baru — utk layout ticker/statusline
   const D30 = 30;
